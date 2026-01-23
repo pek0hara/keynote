@@ -1173,6 +1173,12 @@ body {
         transform-origin: top center;
         margin-bottom: -20px; /* 縮小による下部の余白を詰める */
     }
+
+    /* 黒鍵コンテナの位置調整（スケール時のパディングとの整合性を保つ） */
+    .black-keys-container {
+        left: 11.76px;
+        top: 11.76px;
+    }
     
     /* ギター弦モバイル対応 */
     .fretboard-container {

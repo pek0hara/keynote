@@ -230,7 +230,10 @@ class Game {
         this.questionNumber++;
         this.hasPlayed = false;
         this.userAnswerSequence = []; // ユーザーの回答をリセット
-        
+
+        // フィードバックを非表示（最終問題でも確実に閉じる）
+        document.getElementById('feedback-display').classList.add('hidden');
+
         if (this.questionNumber > this.totalQuestions) {
             this.showResults();
             return;
@@ -276,9 +279,7 @@ class Game {
         } else {
             document.getElementById('hint-text').textContent = 'ボタンを押して音を聴いてください';
         }
-        
-        document.getElementById('feedback-display').classList.add('hidden');
-        
+
         // 回答ボタンをリセット
         document.querySelectorAll('.answer-btn').forEach(btn => {
             btn.classList.remove('correct', 'wrong', 'selected');
