@@ -66,6 +66,35 @@ class AudioEngine {
             'C7': 'Cセブン', 'D7': 'Dセブン', 'E7': 'Eセブン',
             'F7': 'Fセブン', 'G7': 'Gセブン', 'A7': 'Aセブン', 'B7': 'Bセブン'
         };
+
+        // ギターのコードフォーム（弦番号: フレット番号）
+        // 弦番号: 1=1弦(最高音), 6=6弦(最低音)
+        this.guitarChordForms = {
+            // メジャーコード
+            'C':  [{string: 1, fret: 0}, {string: 2, fret: 1}, {string: 3, fret: 0}, {string: 4, fret: 2}, {string: 5, fret: 3}],
+            'D':  [{string: 1, fret: 2}, {string: 2, fret: 3}, {string: 3, fret: 2}, {string: 4, fret: 0}],
+            'E':  [{string: 1, fret: 0}, {string: 2, fret: 0}, {string: 3, fret: 1}, {string: 4, fret: 2}, {string: 5, fret: 2}, {string: 6, fret: 0}],
+            'F':  [{string: 1, fret: 1}, {string: 2, fret: 1}, {string: 3, fret: 2}, {string: 4, fret: 3}, {string: 5, fret: 3}, {string: 6, fret: 1}],
+            'G':  [{string: 1, fret: 3}, {string: 2, fret: 0}, {string: 3, fret: 0}, {string: 4, fret: 0}, {string: 5, fret: 2}, {string: 6, fret: 3}],
+            'A':  [{string: 1, fret: 0}, {string: 2, fret: 2}, {string: 3, fret: 2}, {string: 4, fret: 2}, {string: 5, fret: 0}],
+            'B':  [{string: 1, fret: 2}, {string: 2, fret: 4}, {string: 3, fret: 4}, {string: 4, fret: 4}, {string: 5, fret: 2}],
+            // マイナーコード
+            'Cm': [{string: 1, fret: 3}, {string: 2, fret: 4}, {string: 3, fret: 5}, {string: 4, fret: 5}, {string: 5, fret: 3}],
+            'Dm': [{string: 1, fret: 1}, {string: 2, fret: 3}, {string: 3, fret: 2}, {string: 4, fret: 0}],
+            'Em': [{string: 1, fret: 0}, {string: 2, fret: 0}, {string: 3, fret: 0}, {string: 4, fret: 2}, {string: 5, fret: 2}, {string: 6, fret: 0}],
+            'Fm': [{string: 1, fret: 1}, {string: 2, fret: 1}, {string: 3, fret: 1}, {string: 4, fret: 3}, {string: 5, fret: 3}, {string: 6, fret: 1}],
+            'Gm': [{string: 1, fret: 3}, {string: 2, fret: 3}, {string: 3, fret: 3}, {string: 4, fret: 5}, {string: 5, fret: 5}, {string: 6, fret: 3}],
+            'Am': [{string: 1, fret: 0}, {string: 2, fret: 1}, {string: 3, fret: 2}, {string: 4, fret: 2}, {string: 5, fret: 0}],
+            'Bm': [{string: 1, fret: 2}, {string: 2, fret: 3}, {string: 3, fret: 4}, {string: 4, fret: 4}, {string: 5, fret: 2}],
+            // セブンスコード
+            'C7': [{string: 1, fret: 0}, {string: 2, fret: 1}, {string: 3, fret: 3}, {string: 4, fret: 2}, {string: 5, fret: 3}],
+            'D7': [{string: 1, fret: 2}, {string: 2, fret: 1}, {string: 3, fret: 2}, {string: 4, fret: 0}],
+            'E7': [{string: 1, fret: 0}, {string: 2, fret: 0}, {string: 3, fret: 1}, {string: 4, fret: 0}, {string: 5, fret: 2}, {string: 6, fret: 0}],
+            'F7': [{string: 1, fret: 1}, {string: 2, fret: 1}, {string: 3, fret: 2}, {string: 4, fret: 1}, {string: 5, fret: 3}, {string: 6, fret: 1}],
+            'G7': [{string: 1, fret: 1}, {string: 2, fret: 0}, {string: 3, fret: 0}, {string: 4, fret: 0}, {string: 5, fret: 2}, {string: 6, fret: 3}],
+            'A7': [{string: 1, fret: 0}, {string: 2, fret: 2}, {string: 3, fret: 0}, {string: 4, fret: 2}, {string: 5, fret: 0}],
+            'B7': [{string: 1, fret: 2}, {string: 2, fret: 0}, {string: 3, fret: 2}, {string: 4, fret: 1}, {string: 5, fret: 2}]
+        };
     }
     
     async initialize() {
@@ -232,6 +261,10 @@ class AudioEngine {
     getChordNotes(chordName) {
         return this.chordDefinitions[chordName] || [];
     }
+
+    getGuitarChordForm(chordName) {
+        return this.guitarChordForms[chordName] || [];
+    }
     
     getNotesByDifficulty(difficulty) {
         switch (difficulty) {
@@ -260,6 +293,37 @@ class AudioEngine {
             default:
                 return this.getChordsByDifficulty('easy');
         }
+    }
+
+    // ルート音からメジャースケール上の音を取得
+    getMajorScaleNotes(rootNote, availableNotes) {
+        // ルート音から音名を取得（オクターブ番号を除去）
+        const rootNoteName = rootNote.replace(/[0-9]/g, '');
+
+        // 半音階（クロマティックスケール）
+        const chromaticScale = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+
+        // ルート音のインデックスを取得
+        const rootIndex = chromaticScale.indexOf(rootNoteName);
+        if (rootIndex === -1) return availableNotes; // ルート音が見つからない場合は全ての音を返す
+
+        // メジャースケールの音程（半音数）：全全半全全全半
+        const intervals = [0, 2, 4, 5, 7, 9, 11];
+
+        // スケール上の音名を生成
+        const scaleNoteNames = intervals.map(interval => {
+            const noteIndex = (rootIndex + interval) % 12;
+            return chromaticScale[noteIndex];
+        });
+
+        // availableNotes からスケール上の音のみを抽出
+        const scaleNotes = availableNotes.filter(note => {
+            const noteName = note.replace(/[0-9]/g, '');
+            return scaleNoteNames.includes(noteName);
+        });
+
+        // スケール音が見つからない場合は全ての音を返す
+        return scaleNotes.length > 0 ? scaleNotes : availableNotes;
     }
 }
 

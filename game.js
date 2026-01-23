@@ -10,8 +10,10 @@ class Game {
         this.currentNote = null;
         this.currentChord = null; // コードモード用
         this.currentNotesSequence = []; // 単音モード：連続音のシーケンス
+        this.currentChordsSequence = []; // コードモード：連続コードのシーケンス
+        this.rootChord = null; // コードモード：ルートコード（最初に鳴らす基準）
         this.userAnswerSequence = []; // ユーザーの回答シーケンス
-        this.sequenceLength = 1; // 現在のシーケンスの長さ（1から開始）
+        this.sequenceLength = 3; // 現在のシーケンスの長さ（3から開始）
         this.score = 0;
         this.streak = 0;
         this.maxStreak = 0;
@@ -85,25 +87,54 @@ class Game {
     playKeyNote(key) {
         const note = key.dataset.note;
         if (!note) return;
-        
-        // 音を再生
-        audioEngine.playNote(note, 'piano');
-        
-        // ビジュアルフィードバック
-        key.classList.add('playing');
-        setTimeout(() => key.classList.remove('playing'), 300);
+
+        if (this.gameMode === 'chord') {
+            // コードモード：音名からコードを推測して再生
+            const noteName = note.replace(/[0-9]/g, '');
+            const chord = this.findChordByRoot(noteName);
+            if (chord) {
+                audioEngine.playChord(chord, 'piano');
+                this.animateChord(chord);
+            }
+        } else {
+            // 単音モード
+            audioEngine.playNote(note, 'piano');
+            key.classList.add('playing');
+            setTimeout(() => key.classList.remove('playing'), 300);
+        }
     }
-    
+
     playFretPosition(position) {
         const note = position.dataset.note;
         if (!note) return;
-        
-        // 音を再生
-        audioEngine.playNote(note, 'guitar');
-        
-        // ビジュアルフィードバック
-        position.classList.add('playing');
-        setTimeout(() => position.classList.remove('playing'), 500);
+
+        if (this.gameMode === 'chord') {
+            // コードモード：音名からコードを推測して再生
+            const noteName = note.replace(/[0-9]/g, '');
+            const chord = this.findChordByRoot(noteName);
+            if (chord) {
+                audioEngine.playChord(chord, 'guitar');
+                this.animateChord(chord);
+            }
+        } else {
+            // 単音モード
+            audioEngine.playNote(note, 'guitar');
+            position.classList.add('playing');
+            setTimeout(() => position.classList.remove('playing'), 500);
+        }
+    }
+
+    // 音名からルートが一致するコードを探す
+    findChordByRoot(noteName) {
+        // 利用可能なコードの中から、ルート音が一致するものを探す
+        for (const chord of this.availableChords) {
+            // コード名の最初の部分がルート音（例: "C", "Am" → "A", "C7" → "C"）
+            const chordRoot = chord.replace(/m|7/g, '');
+            if (chordRoot === noteName) {
+                return chord;
+            }
+        }
+        return null;
     }
     
     selectInstrument(instrument) {
@@ -154,7 +185,7 @@ class Game {
         this.maxStreak = 0;
         this.questionNumber = 0;
         this.correctCount = 0;
-        this.sequenceLength = 1; // シーケンス長を1にリセット
+        this.sequenceLength = 3; // シーケンス長を3にリセット
         
         if (this.gameMode === 'chord') {
             this.availableChords = audioEngine.getChordsByDifficulty(this.difficulty);
@@ -183,8 +214,8 @@ class Game {
     }
     
     updateBlackKeysVisibility() {
-        // 上級モード以外は黒鍵を非表示
-        const showBlackKeys = this.difficulty === 'hard';
+        // コードモードまたは上級モードでは黒鍵を表示
+        const showBlackKeys = this.gameMode === 'chord' || this.difficulty === 'hard';
         document.querySelectorAll('.black-key').forEach(key => {
             key.classList.toggle('hidden-key', !showBlackKeys);
         });
@@ -240,9 +271,22 @@ class Game {
         }
         
         if (this.gameMode === 'chord') {
-            // ランダムなコードを選択
-            const randomIndex = Math.floor(Math.random() * this.availableChords.length);
-            this.currentChord = this.availableChords[randomIndex];
+            // コードモード：連続コードのシーケンス生成
+            this.currentChordsSequence = [];
+
+            // ルートコードをランダムに選択（シーケンスの最初に入れる）
+            const rootIndex = Math.floor(Math.random() * this.availableChords.length);
+            this.rootChord = this.availableChords[rootIndex];
+            this.currentChordsSequence.push(this.rootChord);
+
+            // 残りのコードを生成
+            for (let i = 1; i < this.sequenceLength; i++) {
+                const randomIndex = Math.floor(Math.random() * this.availableChords.length);
+                this.currentChordsSequence.push(this.availableChords[randomIndex]);
+            }
+
+            // 後方互換性のため、最初のコードをcurrentChordにも設定
+            this.currentChord = this.currentChordsSequence[0];
         } else {
             // 単音モード：連続音のシーケンス生成
             this.currentNotesSequence = [];
@@ -274,8 +318,12 @@ class Game {
         document.getElementById('question-number').textContent = `${this.questionNumber}/${this.totalQuestions}`;
         
         // ヒントテキストを更新
-        if (this.gameMode === 'single' && this.sequenceLength > 1) {
-            document.getElementById('hint-text').textContent = `${this.sequenceLength}音を順番に当ててください`;
+        if (this.sequenceLength > 1) {
+            if (this.gameMode === 'chord') {
+                document.getElementById('hint-text').textContent = `${this.sequenceLength}コードを順番に当ててください`;
+            } else {
+                document.getElementById('hint-text').textContent = `${this.sequenceLength}音を順番に当ててください`;
+            }
         } else {
             document.getElementById('hint-text').textContent = 'ボタンを押して音を聴いてください';
         }
@@ -315,11 +363,13 @@ class Game {
         const playBtn = document.getElementById('play-sound-btn');
         playBtn.classList.add('playing');
         
-        // シーケンスの音を順番に再生
+        // シーケンスの音を順番に再生（ピアノの色は1音目のみ）
         this.currentNotesSequence.forEach((note, index) => {
             setTimeout(() => {
                 audioEngine.playNote(note, this.instrument);
-                this.animateNote(note);
+                if (index === 0) {
+                    this.animateNote(note);
+                }
             }, index * 500); // 500ms間隔で再生
         });
         
@@ -336,19 +386,37 @@ class Game {
     }
     
     playCurrentChord() {
-        if (!this.currentChord) return;
-        
+        if (this.currentChordsSequence.length === 0) return;
+
         this.hasPlayed = true;
-        audioEngine.playChord(this.currentChord, this.instrument);
-        
+
         const playBtn = document.getElementById('play-sound-btn');
         playBtn.classList.add('playing');
-        setTimeout(() => playBtn.classList.remove('playing'), 1500);
-        
-        // 楽器ビジュアルのアニメーション（コード用）
-        this.animateCurrentChord();
-        
-        document.getElementById('hint-text').textContent = 'コードを聴いたら下のボタンで回答！';
+
+        // 各コードを4回ずつ繰り返し再生
+        const repeatCount = 4;
+        const beatInterval = 500; // 1拍の間隔（ms）
+        const chordDuration = repeatCount * beatInterval; // 1コードあたりの時間
+
+        this.currentChordsSequence.forEach((chord, chordIndex) => {
+            for (let beat = 0; beat < repeatCount; beat++) {
+                const time = chordIndex * chordDuration + beat * beatInterval;
+                setTimeout(() => {
+                    audioEngine.playChord(chord, this.instrument);
+                    // 最初のコードの最初の拍のみビジュアル表示
+                    if (chordIndex === 0 && beat === 0) {
+                        this.animateChord(chord);
+                    }
+                }, time);
+            }
+        });
+
+        // 再生ボタンのアニメーションを終了
+        const totalDuration = this.currentChordsSequence.length * chordDuration + 500;
+        setTimeout(() => playBtn.classList.remove('playing'), totalDuration);
+
+        // ヒントテキストを更新
+        document.getElementById('hint-text').textContent = `${this.sequenceLength}コードを順番にクリックしてください`;
     }
     
     animateCurrentNote() {
@@ -378,35 +446,47 @@ class Game {
                 setTimeout(() => key.classList.remove('playing'), 500);
             }
         } else {
-            // ギターの場合：対応するフレットポジションをハイライト
-            const positions = document.querySelectorAll(`.fret-position[data-note="${note}"]`);
-            positions.forEach(position => {
+            // ギターの場合：対応するフレットポジションを1つだけハイライト
+            const position = document.querySelector(`.fret-position[data-note="${note}"]`);
+            if (position) {
                 position.classList.add('playing');
                 setTimeout(() => position.classList.remove('playing'), 500);
-            });
+            }
         }
     }
     
-    animateCurrentChord() {
-        const notes = audioEngine.getChordNotes(this.currentChord);
-        
-        notes.forEach((note, index) => {
-            setTimeout(() => {
-                if (this.instrument === 'piano') {
+    animateChord(chordName) {
+        if (this.instrument === 'piano') {
+            // ピアノの場合：構成音でハイライト
+            const notes = audioEngine.getChordNotes(chordName);
+            notes.forEach((note, index) => {
+                setTimeout(() => {
                     const key = document.querySelector(`[data-note="${note}"]`);
                     if (key && (key.classList.contains('white-key') || key.classList.contains('black-key'))) {
                         key.classList.add('playing');
                         setTimeout(() => key.classList.remove('playing'), 600);
                     }
-                } else {
-                    const positions = document.querySelectorAll(`.fret-position[data-note="${note}"]`);
-                    positions.forEach(position => {
+                }, index * 50);
+            });
+        } else {
+            // ギターの場合：実際のコードフォームでハイライト
+            const chordForm = audioEngine.getGuitarChordForm(chordName);
+            chordForm.forEach((pos, index) => {
+                setTimeout(() => {
+                    const position = document.querySelector(
+                        `.fret-position[data-string="${pos.string}"][data-fret="${pos.fret}"]`
+                    );
+                    if (position) {
                         position.classList.add('playing');
                         setTimeout(() => position.classList.remove('playing'), 600);
-                    });
-                }
-            }, index * 50);
-        });
+                    }
+                }, index * 50);
+            });
+        }
+    }
+
+    animateCurrentChord() {
+        this.animateChord(this.currentChord);
     }
     
     checkAnswer(selected) {
@@ -416,36 +496,71 @@ class Game {
         }
         
         if (this.gameMode === 'chord') {
-            // コードモードの処理（従来通り）
-            const correctAnswer = this.currentChord;
-            const isCorrect = selected === correctAnswer;
-            
-            // ボタンの状態を更新
-            document.querySelectorAll('.answer-btn').forEach(btn => {
-                btn.disabled = true;
-                if (btn.dataset.chord === correctAnswer) {
-                    btn.classList.add('correct');
-                } else if (btn.dataset.chord === selected && !isCorrect) {
-                    btn.classList.add('wrong');
+            // コードモード：連続コード対応
+            const currentIndex = this.userAnswerSequence.length;
+            const expectedChord = this.currentChordsSequence[currentIndex];
+            const isCorrect = selected === expectedChord;
+
+            // ユーザーの回答を記録
+            this.userAnswerSequence.push(selected);
+
+            // 選択したボタンをハイライト
+            const selectedBtn = document.querySelector(`.answer-btn[data-chord="${selected}"]`);
+            if (selectedBtn) {
+                if (isCorrect) {
+                    selectedBtn.classList.add('selected');
+                    // 正解コードを再生
+                    audioEngine.playChord(expectedChord, this.instrument);
+                } else {
+                    selectedBtn.classList.add('wrong');
                 }
-            });
-            
-            // フィードバック表示
-            this.showFeedback(isCorrect, correctAnswer);
-            
-            // スコア更新
-            if (isCorrect) {
+            }
+
+            // 不正解の場合
+            if (!isCorrect) {
+                // 全てのボタンを無効化
+                document.querySelectorAll('.answer-btn').forEach(btn => {
+                    btn.disabled = true;
+                    if (btn.dataset.chord === expectedChord) {
+                        btn.classList.add('correct');
+                    }
+                });
+
+                this.showFeedback(false, expectedChord);
+                this.streak = 0;
+                this.sequenceLength = 3; // シーケンス長を3にリセット
+
+                setTimeout(() => this.nextQuestion(), 1500);
+                return;
+            }
+
+            // 全て正解した場合
+            if (this.userAnswerSequence.length === this.currentChordsSequence.length) {
+                // 全てのボタンを無効化
+                document.querySelectorAll('.answer-btn').forEach(btn => {
+                    btn.disabled = true;
+                });
+
+                this.showFeedback(true, null);
+
+                // スコア更新
                 this.correctCount++;
                 this.streak++;
                 this.maxStreak = Math.max(this.maxStreak, this.streak);
-                this.score += 100 + (this.streak * 10);
+                this.score += 100 + (this.streak * 10) + (this.sequenceLength - 1) * 50;
+
+                // シーケンス長を増やす（最大5コードまで）
+                if (this.sequenceLength < 5) {
+                    this.sequenceLength++;
+                }
+
+                setTimeout(() => this.nextQuestion(), 1500);
             } else {
-                this.streak = 0;
+                // まだ回答が続く場合
+                const remaining = this.currentChordsSequence.length - this.userAnswerSequence.length;
+                document.getElementById('hint-text').textContent = `あと${remaining}コード！`;
             }
-            
-            // 次の問題へ
-            setTimeout(() => this.nextQuestion(), 1500);
-            
+
         } else {
             // 単音モード：連続音対応
             const currentIndex = this.userAnswerSequence.length;
@@ -480,7 +595,7 @@ class Game {
                 
                 this.showFeedback(false, expectedNote);
                 this.streak = 0;
-                this.sequenceLength = 1; // シーケンス長を1にリセット
+                this.sequenceLength = 3; // シーケンス長を3にリセット
                 
                 setTimeout(() => this.nextQuestion(), 1500);
                 return;
