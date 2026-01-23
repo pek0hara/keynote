@@ -1154,10 +1154,6 @@ body {
         font-size: 1.2rem;
     }
     
-    .instrument-selector {
-        grid-template-columns: 1fr;
-    }
-    
     .result-actions {
         flex-direction: column;
     }
