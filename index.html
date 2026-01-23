@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ピアノとギターで音感を鍛える音当てゲーム。楽しみながら絶対音感を身につけよう！">
+    <title>🎵 音感マスター - ピアノ＆ギター音当てゲーム</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 背景エフェクト -->
+        <div class="bg-effects">
+            <div class="floating-note note-1">♪</div>
+            <div class="floating-note note-2">♫</div>
+            <div class="floating-note note-3">♬</div>
+            <div class="floating-note note-4">♩</div>
+            <div class="floating-note note-5">♭</div>
+            <div class="floating-note note-6">♯</div>
+        </div>
+
+        <!-- ヘッダー -->
+        <header class="header">
+            <h1 class="logo">
+                <span class="logo-icon">🎵</span>
+                <span class="logo-text">音感マスター</span>
+            </h1>
+        </header>
+
+        <!-- メインコンテンツ -->
+        <main class="main-content">
+            <!-- スタート画面 -->
+            <section id="start-screen" class="screen active">
+                <div class="glass-card start-card">
+                    
+                    <!-- 楽器選択 -->
+                    
+                    <!-- 楽器選択 -->
+                    <div class="selection-group">
+                        <h3 class="selection-label">楽器を選択</h3>
+                        <div class="instrument-selector">
+                            <button class="instrument-btn active" data-instrument="piano" id="btn-piano">
+                                <span class="instrument-icon">🎹</span>
+                                <span class="instrument-name">ピアノ</span>
+                            </button>
+                            <button class="instrument-btn" data-instrument="guitar" id="btn-guitar">
+                                <span class="instrument-icon">🎸</span>
+                                <span class="instrument-name">ギター</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ゲームモード選択 -->
+                    <div class="selection-group">
+                        <h3 class="selection-label">ゲームモード</h3>
+                        <div class="mode-selector">
+                            <button class="mode-btn active" data-mode="single" id="btn-single">
+                                <span class="mode-icon">🎵</span>
+                                <span class="mode-name">単音モード</span>
+                                <span class="mode-desc">1つの音を当てる</span>
+                            </button>
+                            <button class="mode-btn" data-mode="chord" id="btn-chord">
+                                <span class="mode-icon">🎶</span>
+                                <span class="mode-name">コードモード</span>
+                                <span class="mode-desc">和音を当てる</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 難易度選択 -->
+                    <div class="selection-group">
+                        <h3 class="selection-label">難易度を選択</h3>
+                        <div class="difficulty-selector">
+                            <button class="difficulty-btn active" data-difficulty="easy" id="btn-easy">
+                                <span class="difficulty-stars">⭐</span>
+                                <span class="difficulty-name">初級</span>
+                                <span class="difficulty-desc" id="difficulty-easy-desc">ドレミファソラシド</span>
+                            </button>
+                            <button class="difficulty-btn" data-difficulty="medium" id="btn-medium">
+                                <span class="difficulty-stars">⭐⭐</span>
+                                <span class="difficulty-name">中級</span>
+                                <span class="difficulty-desc" id="difficulty-medium-desc">2オクターブ</span>
+                            </button>
+                            <button class="difficulty-btn" data-difficulty="hard" id="btn-hard">
+                                <span class="difficulty-stars">⭐⭐⭐</span>
+                                <span class="difficulty-name">上級</span>
+                                <span class="difficulty-desc" id="difficulty-hard-desc">黒鍵含む</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button class="start-btn" id="start-game-btn">
+                        <span class="btn-text">ゲームスタート</span>
+                        <span class="btn-icon">▶</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- ゲーム画面 -->
+            <section id="game-screen" class="screen">
+                <div class="game-header">
+                    <div class="score-display">
+                        <div class="score-item">
+                            <span class="score-label">スコア</span>
+                            <span class="score-value" id="current-score">0</span>
+                        </div>
+                        <div class="score-item">
+                            <span class="score-label">連続正解</span>
+                            <span class="score-value streak" id="current-streak">0</span>
+                        </div>
+                        <div class="score-item">
+                            <span class="score-label">問題</span>
+                            <span class="score-value" id="question-number">1/10</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card game-card">
+                    <!-- 再生ボタン -->
+                    <div class="play-section">
+                        <button class="play-btn" id="play-sound-btn">
+                            <span class="play-icon">🔊</span>
+                            <span class="play-text">音を聴く</span>
+                        </button>
+                        <p class="hint-text" id="hint-text">ボタンを押して音を聴いてください</p>
+                    </div>
+
+                    <!-- 楽器ビジュアルUI -->
+                    <div class="instrument-visual" id="instrument-visual">
+                        <!-- ピアノ鍵盤 -->
+                        <div class="piano-keyboard" id="piano-keyboard">
+                            <!-- 上段: C3-B3（中級以上で表示） -->
+                            <div class="keyboard-row keyboard-row-upper hidden" id="keyboard-upper">
+                                <div class="keyboard-container">
+                                    <div class="white-key" data-note="C3"><span>C</span></div>
+                                    <div class="white-key" data-note="D3"><span>D</span></div>
+                                    <div class="white-key" data-note="E3"><span>E</span></div>
+                                    <div class="white-key" data-note="F3"><span>F</span></div>
+                                    <div class="white-key" data-note="G3"><span>G</span></div>
+                                    <div class="white-key" data-note="A3"><span>A</span></div>
+                                    <div class="white-key" data-note="B3"><span>B</span></div>
+                                    <!-- 黒鍵 -->
+                                    <div class="black-keys-container">
+                                        <div class="black-key" data-note="C#3" style="left: 34px;"><span>C♯</span></div>
+                                        <div class="black-key" data-note="D#3" style="left: 82px;"><span>D♯</span></div>
+                                        <div class="black-key" data-note="F#3" style="left: 178px;"><span>F♯</span></div>
+                                        <div class="black-key" data-note="G#3" style="left: 226px;"><span>G♯</span></div>
+                                        <div class="black-key" data-note="A#3" style="left: 274px;"><span>A♯</span></div>
+                                    </div>
+                                </div>
+                                <div class="octave-label">低音</div>
+                            </div>
+                            <!-- 下段: C4-C5（常に表示） -->
+                            <div class="keyboard-row keyboard-row-lower" id="keyboard-lower">
+                                <div class="keyboard-container">
+                                    <div class="white-key" data-note="C4"><span>C</span></div>
+                                    <div class="white-key" data-note="D4"><span>D</span></div>
+                                    <div class="white-key" data-note="E4"><span>E</span></div>
+                                    <div class="white-key" data-note="F4"><span>F</span></div>
+                                    <div class="white-key" data-note="G4"><span>G</span></div>
+                                    <div class="white-key" data-note="A4"><span>A</span></div>
+                                    <div class="white-key" data-note="B4"><span>B</span></div>
+                                    <div class="white-key" data-note="C5"><span>C</span></div>
+                                    <!-- 黒鍵（上級モード用） -->
+                                    <div class="black-keys-container">
+                                        <div class="black-key" data-note="C#4" style="left: 34px;"><span>C♯</span></div>
+                                        <div class="black-key" data-note="D#4" style="left: 82px;"><span>D♯</span></div>
+                                        <div class="black-key" data-note="F#4" style="left: 178px;"><span>F♯</span></div>
+                                        <div class="black-key" data-note="G#4" style="left: 226px;"><span>G♯</span></div>
+                                        <div class="black-key" data-note="A#4" style="left: 274px;"><span>A♯</span></div>
+                                    </div>
+                                </div>
+                                <div class="octave-label">高音</div>
+                            </div>
+                        </div>
+
+                        <!-- ギター弦 -->
+                        <div class="guitar-fretboard hidden" id="guitar-fretboard">
+                            <div class="fretboard-container">
+                                <!-- 弦のラベル -->
+                                <div class="string-labels">
+                                    <span>1弦 (E)</span>
+                                    <span>2弦 (B)</span>
+                                    <span>3弦 (G)</span>
+                                    <span>4弦 (D)</span>
+                                    <span>5弦 (A)</span>
+                                    <span>6弦 (E)</span>
+                                </div>
+                                <!-- フレットボードグリッド -->
+                                <div class="fretboard-grid">
+                                    <!-- ナット（開放弦） -->
+                                    <div class="fret-column nut-column">
+                                        <div class="fret-position" data-string="1" data-fret="0" data-note="E4"><span>E</span></div>
+                                        <div class="fret-position" data-string="2" data-fret="0" data-note="B3"><span>B</span></div>
+                                        <div class="fret-position" data-string="3" data-fret="0" data-note="G3"><span>G</span></div>
+                                        <div class="fret-position" data-string="4" data-fret="0" data-note="D3"><span>D</span></div>
+                                        <div class="fret-position" data-string="5" data-fret="0" data-note="A3"><span>A</span></div>
+                                        <div class="fret-position" data-string="6" data-fret="0" data-note="E3"><span>E</span></div>
+                                    </div>
+                                    <!-- 1フレット -->
+                                    <div class="fret-column">
+                                        <div class="fret-position" data-string="1" data-fret="1" data-note="F4"><span>F</span></div>
+                                        <div class="fret-position" data-string="2" data-fret="1" data-note="C4"><span>C</span></div>
+                                        <div class="fret-position" data-string="3" data-fret="1" data-note="G#3"><span>G♯</span></div>
+                                        <div class="fret-position" data-string="4" data-fret="1" data-note="D#3"><span>D♯</span></div>
+                                        <div class="fret-position" data-string="5" data-fret="1" data-note="A#3"><span>A♯</span></div>
+                                        <div class="fret-position" data-string="6" data-fret="1" data-note="F3"><span>F</span></div>
+                                    </div>
+                                    <!-- 2フレット -->
+                                    <div class="fret-column">
+                                        <div class="fret-position" data-string="1" data-fret="2" data-note="F#4"><span>F♯</span></div>
+                                        <div class="fret-position" data-string="2" data-fret="2" data-note="C#4"><span>C♯</span></div>
+                                        <div class="fret-position" data-string="3" data-fret="2" data-note="A3"><span>A</span></div>
+                                        <div class="fret-position" data-string="4" data-fret="2" data-note="E3"><span>E</span></div>
+                                        <div class="fret-position" data-string="5" data-fret="2" data-note="B3"><span>B</span></div>
+                                        <div class="fret-position" data-string="6" data-fret="2" data-note="F#3"><span>F♯</span></div>
+                                    </div>
+                                    <!-- 3フレット（ポジションマーカーあり） -->
+                                    <div class="fret-column has-marker">
+                                        <div class="fret-position" data-string="1" data-fret="3" data-note="G4"><span>G</span></div>
+                                        <div class="fret-position" data-string="2" data-fret="3" data-note="D4"><span>D</span></div>
+                                        <div class="fret-position" data-string="3" data-fret="3" data-note="A#3"><span>A♯</span></div>
+                                        <div class="fret-position" data-string="4" data-fret="3" data-note="F3"><span>F</span></div>
+                                        <div class="fret-position" data-string="5" data-fret="3" data-note="C4"><span>C</span></div>
+                                        <div class="fret-position" data-string="6" data-fret="3" data-note="G3"><span>G</span></div>
+                                        <div class="fret-marker-dot"></div>
+                                    </div>
+                                    <!-- 4フレット -->
+                                    <div class="fret-column">
+                                        <div class="fret-position" data-string="1" data-fret="4" data-note="G#4"><span>G♯</span></div>
+                                        <div class="fret-position" data-string="2" data-fret="4" data-note="D#4"><span>D♯</span></div>
+                                        <div class="fret-position" data-string="3" data-fret="4" data-note="B3"><span>B</span></div>
+                                        <div class="fret-position" data-string="4" data-fret="4" data-note="F#3"><span>F♯</span></div>
+                                        <div class="fret-position" data-string="5" data-fret="4" data-note="C#4"><span>C♯</span></div>
+                                        <div class="fret-position" data-string="6" data-fret="4" data-note="G#3"><span>G♯</span></div>
+                                    </div>
+                                    <!-- 5フレット（ポジションマーカーあり） -->
+                                    <div class="fret-column has-marker">
+                                        <div class="fret-position" data-string="1" data-fret="5" data-note="A4"><span>A</span></div>
+                                        <div class="fret-position" data-string="2" data-fret="5" data-note="E4"><span>E</span></div>
+                                        <div class="fret-position" data-string="3" data-fret="5" data-note="C4"><span>C</span></div>
+                                        <div class="fret-position" data-string="4" data-fret="5" data-note="G3"><span>G</span></div>
+                                        <div class="fret-position" data-string="5" data-fret="5" data-note="D4"><span>D</span></div>
+                                        <div class="fret-position" data-string="6" data-fret="5" data-note="A3"><span>A</span></div>
+                                        <div class="fret-marker-dot"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 回答ボタン -->
+                    <div class="answer-section">
+                        <h3 class="answer-label">この音は何でしょう？</h3>
+                        <div class="answer-grid" id="answer-grid">
+                            <!-- JavaScriptで動的に生成 -->
+                        </div>
+                    </div>
+
+                    <!-- フィードバック表示 -->
+                    <div class="feedback-display hidden" id="feedback-display">
+                        <div class="feedback-content">
+                            <span class="feedback-icon" id="feedback-icon">✓</span>
+                            <span class="feedback-text" id="feedback-text">正解！</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ゲーム操作ボタン -->
+                <div class="game-controls">
+                    <button class="control-btn back-btn" id="back-to-menu-btn">
+                        <span>🏠</span>
+                        <span>メニューに戻る</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- 結果画面 -->
+            <section id="result-screen" class="screen">
+                <div class="glass-card result-card">
+                    <div class="result-header">
+                        <span class="result-emoji" id="result-emoji">🎉</span>
+                        <h2 class="result-title" id="result-title">すばらしい！</h2>
+                    </div>
+
+                    <div class="result-stats">
+                        <div class="stat-item">
+                            <span class="stat-value" id="final-score">0</span>
+                            <span class="stat-label">スコア</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value" id="correct-count">0/10</span>
+                            <span class="stat-label">正解数</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value" id="max-streak">0</span>
+                            <span class="stat-label">最大連続正解</span>
+                        </div>
+                    </div>
+
+                    <div class="result-rank">
+                        <span class="rank-label">あなたのランク</span>
+                        <span class="rank-badge" id="rank-badge">🥇 音感マスター</span>
+                    </div>
+
+                    <div class="result-actions">
+                        <button class="action-btn retry-btn" id="retry-btn">
+                            <span>🔄</span>
+                            <span>もう一度プレイ</span>
+                        </button>
+                        <button class="action-btn menu-btn" id="menu-btn">
+                            <span>🏠</span>
+                            <span>メニューに戻る</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- フッター -->
+        <footer class="footer">
+            <p>🎵 音感マスター © 2026</p>
+        </footer>
+    </div>
+
+    <script src="audio-engine.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>

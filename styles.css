@@ -1,0 +1,1189 @@
+/* =============================================
+   音感マスター - スタイルシート
+   ============================================= */
+
+/* CSS変数（デザイントークン） */
+:root {
+    /* カラーパレット */
+    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    --error-gradient: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+    
+    --bg-dark: #0f0f1a;
+    --bg-darker: #080810;
+    --glass-bg: rgba(255, 255, 255, 0.08);
+    --glass-border: rgba(255, 255, 255, 0.15);
+    
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.7);
+    --text-muted: rgba(255, 255, 255, 0.4);
+    
+    --piano-color: #667eea;
+    --guitar-color: #f5576c;
+    
+    /* スペーシング */
+    /* スペーシング */
+    --spacing-xs: 0.2rem;
+    --spacing-sm: 0.4rem;
+    --spacing-md: 0.75rem;
+    --spacing-lg: 1rem;
+    --spacing-xl: 1.5rem;
+    --spacing-2xl: 2rem;
+    
+    /* ボーダー */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 20px;
+    --radius-xl: 28px;
+    --radius-full: 9999px;
+    
+    /* シャドウ */
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.4);
+    --shadow-glow: 0 0 40px rgba(102, 126, 234, 0.3);
+    
+    /* トランジション */
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.3s ease;
+    --transition-slow: 0.5s ease;
+}
+
+/* リセット＆ベース */
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 16px;
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: 'Noto Sans JP', 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg-dark);
+    color: var(--text-primary);
+    min-height: 100vh;
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+/* アプリコンテナ */
+.app-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    background: 
+        radial-gradient(ellipse at top left, rgba(102, 126, 234, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at bottom right, rgba(245, 87, 108, 0.15) 0%, transparent 50%),
+        var(--bg-dark);
+}
+
+/* 背景エフェクト - 浮遊する音符 */
+.bg-effects {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+}
+
+.floating-note {
+    position: absolute;
+    font-size: 2rem;
+    color: rgba(255, 255, 255, 0.1);
+    animation: float 15s infinite ease-in-out;
+}
+
+.note-1 { top: 10%; left: 5%; animation-delay: 0s; font-size: 3rem; }
+.note-2 { top: 20%; right: 10%; animation-delay: -2s; font-size: 2.5rem; }
+.note-3 { top: 50%; left: 15%; animation-delay: -4s; }
+.note-4 { top: 70%; right: 20%; animation-delay: -6s; font-size: 2.5rem; }
+.note-5 { top: 85%; left: 25%; animation-delay: -8s; }
+.note-6 { top: 30%; right: 5%; animation-delay: -10s; font-size: 3rem; }
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 0.1;
+    }
+    50% {
+        transform: translateY(-30px) rotate(10deg);
+        opacity: 0.2;
+    }
+}
+
+/* ヘッダー */
+.header {
+    padding: var(--spacing-md) var(--spacing-lg);
+    text-align: center;
+    position: relative;
+    z-index: 10;
+}
+
+.logo {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: 1.2rem;
+    font-weight: 700;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.logo-icon {
+    font-size: 1.4rem;
+    -webkit-text-fill-color: initial;
+    animation: pulse 2s infinite ease-in-out;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+/* メインコンテンツ */
+.main-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-lg);
+    position: relative;
+    z-index: 10;
+}
+
+/* スクリーン切り替え */
+.screen {
+    display: none;
+    width: 100%;
+    max-width: 600px;
+    animation: fadeIn 0.5s ease;
+}
+
+.screen.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* グラスカード */
+.glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-2xl);
+    box-shadow: var(--shadow-lg);
+}
+
+/* ========== スタート画面 ========== */
+.start-card {
+    text-align: center;
+}
+
+.screen-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: var(--spacing-sm);
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.screen-description {
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-xl);
+}
+
+.selection-group {
+    margin-bottom: var(--spacing-xl);
+}
+
+.selection-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-md);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+/* 楽器選択ボタン */
+.instrument-selector {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-md);
+}
+
+.instrument-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    color: var(--text-primary);
+}
+
+.instrument-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+.instrument-btn.active {
+    border-color: var(--piano-color);
+    background: rgba(102, 126, 234, 0.2);
+    box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+}
+
+.instrument-btn[data-instrument="guitar"].active {
+    border-color: var(--guitar-color);
+    background: rgba(245, 87, 108, 0.2);
+    box-shadow: 0 0 20px rgba(245, 87, 108, 0.3);
+}
+
+.instrument-icon {
+    font-size: 1.8rem;
+}
+
+.instrument-name {
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+/* 難易度選択ボタン */
+.difficulty-selector {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.difficulty-btn {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    text-align: left;
+    color: var(--text-primary);
+}
+
+.difficulty-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.difficulty-btn.active {
+    border-color: var(--piano-color);
+    background: rgba(102, 126, 234, 0.15);
+}
+
+.difficulty-stars {
+    font-size: 1rem;
+    min-width: 60px;
+}
+
+.difficulty-name {
+    font-weight: 600;
+}
+
+.difficulty-desc {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+/* ゲームモード選択ボタン */
+.mode-selector {
+    display: flex;
+    gap: var(--spacing-md);
+}
+
+.mode-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm);
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    color: var(--text-primary);
+}
+
+.mode-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+.mode-btn.active {
+    border-color: var(--accent-color);
+    background: linear-gradient(135deg, rgba(245, 87, 108, 0.15) 0%, rgba(240, 147, 251, 0.15) 100%);
+    box-shadow: 0 4px 20px rgba(245, 87, 108, 0.2);
+}
+
+.mode-icon {
+    font-size: 1.5rem;
+}
+
+.mode-name {
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.mode-desc {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.mode-btn.active .mode-icon {
+    animation: bounce 1s ease-in-out infinite;
+}
+
+/* スタートボタン */
+.start-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-lg) var(--spacing-2xl);
+    background: var(--primary-gradient);
+    border: none;
+    border-radius: var(--radius-full);
+    color: white;
+    font-size: 1.2rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    box-shadow: var(--shadow-glow);
+    margin-top: var(--spacing-lg);
+}
+
+.start-btn:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 0 60px rgba(102, 126, 234, 0.5);
+}
+
+.start-btn:active {
+    transform: translateY(0) scale(0.98);
+}
+
+.btn-icon {
+    font-size: 1rem;
+}
+
+/* ========== ゲーム画面 ========== */
+.game-header {
+    margin-bottom: var(--spacing-lg);
+}
+
+.score-display {
+    display: flex;
+    justify-content: center;
+    gap: var(--spacing-xl);
+    flex-wrap: wrap;
+}
+
+.score-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.score-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.score-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    font-family: 'Outfit', sans-serif;
+}
+
+.score-value.streak {
+    color: #38ef7d;
+}
+
+.game-card {
+    text-align: center;
+    position: relative;
+}
+
+.current-instrument {
+    margin-bottom: var(--spacing-lg);
+}
+
+.instrument-emoji {
+    font-size: 4rem;
+    display: inline-block;
+    animation: bounce 2s infinite ease-in-out;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+/* 再生セクション */
+.play-section {
+    margin-bottom: var(--spacing-xl);
+}
+
+.play-btn {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-xl) var(--spacing-2xl);
+    background: var(--primary-gradient);
+    border: none;
+    border-radius: var(--radius-xl);
+    color: white;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    box-shadow: var(--shadow-glow);
+}
+
+.play-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 60px rgba(102, 126, 234, 0.5);
+}
+
+.play-btn:active {
+    transform: scale(0.95);
+}
+
+.play-btn.playing {
+    animation: pulse-glow 1s infinite;
+}
+
+@keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 20px rgba(102, 126, 234, 0.5); }
+    50% { box-shadow: 0 0 60px rgba(102, 126, 234, 0.8); }
+}
+
+.play-icon {
+    font-size: 2.5rem;
+}
+
+.play-text {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.hint-text {
+    margin-top: var(--spacing-md);
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+/* 回答セクション */
+.answer-section {
+    margin-bottom: var(--spacing-lg);
+}
+
+.answer-label {
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin-bottom: var(--spacing-lg);
+    color: var(--text-secondary);
+}
+
+.answer-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--spacing-sm);
+}
+
+.answer-btn {
+    padding: var(--spacing-md);
+    background: rgba(255, 255, 255, 0.08);
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.answer-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: var(--piano-color);
+    transform: translateY(-2px);
+}
+
+.answer-btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.answer-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.answer-btn.selected {
+    background: rgba(102, 126, 234, 0.5); /* 選択中の色 */
+    border-color: var(--piano-color);
+    box-shadow: 0 0 10px rgba(102, 126, 234, 0.4);
+}
+
+.answer-btn.correct {
+    background: var(--success-gradient);
+    border-color: transparent;
+    animation: correct-pulse 0.5s ease;
+}
+
+.answer-btn.wrong {
+    background: var(--error-gradient);
+    border-color: transparent;
+    animation: wrong-shake 0.5s ease;
+}
+
+@keyframes correct-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+@keyframes wrong-shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+/* フィードバック表示 */
+.feedback-display {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 100;
+    animation: feedback-pop 0.5s ease;
+}
+
+.feedback-display.hidden {
+    display: none;
+}
+
+.feedback-content {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-lg) var(--spacing-2xl);
+    background: rgba(0, 0, 0, 0.9);
+    border-radius: var(--radius-full);
+    box-shadow: var(--shadow-lg);
+}
+
+.feedback-icon {
+    font-size: 2rem;
+}
+
+.feedback-icon.correct {
+    color: #38ef7d;
+}
+
+.feedback-icon.wrong {
+    color: #f45c43;
+}
+
+.feedback-text {
+    font-size: 1.3rem;
+    font-weight: 600;
+}
+
+@keyframes feedback-pop {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.5);
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.1);
+    }
+    100% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+/* ゲームコントロール */
+.game-controls {
+    display: flex;
+    justify-content: center;
+    margin-top: var(--spacing-lg);
+}
+
+.control-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--radius-full);
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+}
+
+.control-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: var(--text-primary);
+}
+
+/* ========== 結果画面 ========== */
+.result-card {
+    text-align: center;
+}
+
+.result-header {
+    margin-bottom: var(--spacing-xl);
+}
+
+.result-emoji {
+    font-size: 4rem;
+    display: block;
+    margin-bottom: var(--spacing-md);
+    animation: celebrate 1s ease;
+}
+
+@keyframes celebrate {
+    0% { transform: scale(0) rotate(-180deg); }
+    50% { transform: scale(1.2) rotate(10deg); }
+    100% { transform: scale(1) rotate(0deg); }
+}
+
+.result-title {
+    font-size: 2rem;
+    font-weight: 700;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* 結果統計 */
+.result-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-xl);
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-lg);
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-md);
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    font-family: 'Outfit', sans-serif;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+/* ランク表示 */
+.result-rank {
+    margin-bottom: var(--spacing-xl);
+    padding: var(--spacing-lg);
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-lg);
+}
+
+.rank-label {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: var(--spacing-sm);
+}
+
+.rank-badge {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+/* 結果アクション */
+.result-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md) var(--spacing-xl);
+    border: none;
+    border-radius: var(--radius-full);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+}
+
+.retry-btn {
+    background: var(--primary-gradient);
+    color: white;
+    box-shadow: var(--shadow-glow);
+}
+
+.retry-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 40px rgba(102, 126, 234, 0.5);
+}
+
+.menu-btn {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.menu-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* フッター */
+.footer {
+    text-align: center;
+    padding: var(--spacing-lg);
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    position: relative;
+    z-index: 10;
+}
+
+/* ========== 楽器ビジュアルUI ========== */
+.instrument-visual {
+    margin-bottom: var(--spacing-xl);
+    padding: var(--spacing-md);
+}
+
+/* ピアノ鍵盤 */
+.piano-keyboard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.piano-keyboard.hidden {
+    display: none;
+}
+
+.keyboard-row {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.keyboard-row.hidden {
+    display: none;
+}
+
+.octave-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    padding: 0 var(--spacing-xs);
+}
+
+.keyboard-container {
+    position: relative;
+    display: flex;
+    background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+    padding: 10px;
+    border-radius: var(--radius-lg);
+    box-shadow: 
+        0 10px 30px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* 上段（7鍵）を下段（8鍵）と同じ幅に揃える */
+.keyboard-row-upper .keyboard-container {
+    /* 8鍵分の幅: (44px + 4px margin) * 8 + padding 20px = 404px */
+    min-width: 404px;
+    justify-content: flex-start; /* 左寄せ */
+}
+
+.white-key {
+    width: 44px;
+    height: 140px;
+    background: linear-gradient(180deg, #ffffff 0%, #f0f0f0 85%, #d0d0d0 100%);
+    border: 1px solid #ccc;
+    border-radius: 0 0 6px 6px;
+    margin: 0 2px;
+    cursor: pointer;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 10px;
+    transition: all var(--transition-fast);
+    box-shadow: 
+        0 4px 8px rgba(0, 0, 0, 0.3),
+        inset 0 -3px 6px rgba(0, 0, 0, 0.1);
+}
+
+.white-key span {
+    font-size: 0.7rem;
+    color: #666;
+    font-weight: 600;
+    pointer-events: none;
+}
+
+.white-key:hover {
+    background: linear-gradient(180deg, #f8f8f8 0%, #e8e8e8 85%, #c8c8c8 100%);
+    transform: translateY(1px);
+}
+
+.white-key:active,
+.white-key.active {
+    background: linear-gradient(180deg, #e8e8e8 0%, #d8d8d8 85%, #b8b8b8 100%);
+    transform: translateY(3px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.white-key.playing {
+    background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+    transform: translateY(3px);
+}
+
+.white-key.playing span {
+    color: white;
+}
+
+.black-keys-container {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: calc(100% - 20px);
+    height: 90px;
+    pointer-events: none;
+}
+
+.black-key {
+    position: absolute;
+    width: 28px;
+    height: 90px;
+    background: linear-gradient(180deg, #2d2d2d 0%, #1a1a1a 100%);
+    border-radius: 0 0 4px 4px;
+    cursor: pointer;
+    pointer-events: auto;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 6px;
+    z-index: 10;
+    transition: all var(--transition-fast);
+    box-shadow: 
+        0 4px 8px rgba(0, 0, 0, 0.5),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.black-key span {
+    font-size: 0.55rem;
+    color: #888;
+    font-weight: 600;
+    pointer-events: none;
+}
+
+.black-key:hover {
+    background: linear-gradient(180deg, #3d3d3d 0%, #2a2a2a 100%);
+}
+
+.black-key:active,
+.black-key.active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.black-key.playing {
+    background: linear-gradient(180deg, #f5576c 0%, #f093fb 100%);
+}
+
+.black-key.playing span {
+    color: white;
+}
+
+.black-key.hidden-key {
+    display: none;
+}
+
+/* ギターフレットボード */
+.guitar-fretboard {
+    display: flex;
+    justify-content: center;
+}
+
+.guitar-fretboard.hidden {
+    display: none;
+}
+
+.fretboard-container {
+    display: flex;
+    gap: 0;
+    background: linear-gradient(180deg, #5D4037 0%, #8D6E63 20%, #5D4037 100%);
+    border-radius: var(--radius-lg);
+    padding: 12px;
+    box-shadow: 
+        0 10px 30px rgba(0, 0, 0, 0.5),
+        inset 0 2px 4px rgba(255, 255, 255, 0.1);
+}
+
+.string-labels {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    padding-right: 8px;
+    min-width: 70px;
+}
+
+.string-labels span {
+    font-size: 0.65rem;
+    color: rgba(255, 255, 255, 0.7);
+    text-align: right;
+    padding: 4px 0;
+}
+
+.fretboard-grid {
+    display: flex;
+    gap: 0;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.fret-column {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    position: relative;
+    border-right: 3px solid #9e9e9e;
+    background: linear-gradient(90deg, 
+        rgba(0,0,0,0.1) 0%, 
+        transparent 50%, 
+        rgba(0,0,0,0.1) 100%
+    );
+}
+
+.fret-column.nut-column {
+    border-right: 6px solid #f5f5dc;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.fret-column.nut-column .fret-position {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.fret-position {
+    width: 52px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    position: relative;
+    border-bottom: 1px solid transparent;
+}
+
+/* 弦のビジュアル */
+.fret-position::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 2px;
+    background: linear-gradient(90deg, 
+        rgba(200, 200, 200, 0.6),
+        rgba(255, 255, 255, 0.9),
+        rgba(200, 200, 200, 0.6)
+    );
+    pointer-events: none;
+}
+
+/* 弦の太さを変える */
+.fret-position[data-string="1"]::after { height: 1px; }
+.fret-position[data-string="2"]::after { height: 1.5px; }
+.fret-position[data-string="3"]::after { height: 2px; }
+.fret-position[data-string="4"]::after { 
+    height: 2.5px; 
+    background: linear-gradient(90deg, #b8860b, #daa520, #b8860b);
+}
+.fret-position[data-string="5"]::after { 
+    height: 3px; 
+    background: linear-gradient(90deg, #b8860b, #daa520, #b8860b);
+}
+.fret-position[data-string="6"]::after { 
+    height: 3.5px; 
+    background: linear-gradient(90deg, #b8860b, #daa520, #b8860b);
+}
+
+.fret-position span {
+    font-size: 0.6rem;
+    color: rgba(255, 255, 255, 0.5);
+    font-weight: 500;
+    z-index: 1;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+}
+
+.fret-position:hover {
+    background: rgba(102, 126, 234, 0.3);
+}
+
+.fret-position:hover span {
+    opacity: 1;
+    color: white;
+}
+
+.fret-position:hover::after {
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+}
+
+.fret-position:active {
+    background: rgba(102, 126, 234, 0.5);
+}
+
+.fret-position.playing {
+    background: linear-gradient(135deg, rgba(245, 87, 108, 0.6) 0%, rgba(240, 147, 251, 0.6) 100%);
+}
+
+.fret-position.playing span {
+    opacity: 1;
+    color: white;
+}
+
+.fret-position.playing::after {
+    animation: string-vibrate 0.08s ease-in-out 6;
+    box-shadow: 0 0 15px rgba(245, 87, 108, 0.8);
+}
+
+@keyframes string-vibrate {
+    0%, 100% { transform: translateY(-50%); }
+    25% { transform: translateY(calc(-50% - 3px)); }
+    75% { transform: translateY(calc(-50% + 3px)); }
+}
+
+/* フレットマーカードット */
+.fret-marker-dot {
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 8px;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 50%;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 640px) {
+    .glass-card {
+        padding: var(--spacing-xl);
+    }
+    
+    .answer-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .result-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .score-display {
+        gap: var(--spacing-md);
+    }
+    
+    .score-value {
+        font-size: 1.2rem;
+    }
+    
+    .instrument-selector {
+        grid-template-columns: 1fr;
+    }
+    
+    .result-actions {
+        flex-direction: column;
+    }
+    
+    .action-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    /* ピアノ鍵盤モバイル対応 */
+    .keyboard-container {
+        transform: scale(0.75);
+        transform-origin: center;
+    }
+    
+    .white-key {
+        width: 36px;
+        height: 110px;
+    }
+    
+    .black-key {
+        width: 24px;
+        height: 70px;
+    }
+    
+    /* ギター弦モバイル対応 */
+    .fretboard-container {
+        height: 160px;
+    }
+}

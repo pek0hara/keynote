@@ -1,0 +1,267 @@
+/**
+ * 音感マスター - オーディオエンジン
+ * Web Audio APIを使用してピアノとギターの音を生成
+ */
+
+class AudioEngine {
+    constructor() {
+        this.audioContext = null;
+        this.isInitialized = false;
+        
+        // 音階の周波数（A4 = 440Hz基準）
+        this.noteFrequencies = {
+            'C3': 130.81, 'C#3': 138.59, 'D3': 146.83, 'D#3': 155.56,
+            'E3': 164.81, 'F3': 174.61, 'F#3': 185.00, 'G3': 196.00,
+            'G#3': 207.65, 'A3': 220.00, 'A#3': 233.08, 'B3': 246.94,
+            'C4': 261.63, 'C#4': 277.18, 'D4': 293.66, 'D#4': 311.13,
+            'E4': 329.63, 'F4': 349.23, 'F#4': 369.99, 'G4': 392.00,
+            'G#4': 415.30, 'A4': 440.00, 'A#4': 466.16, 'B4': 493.88,
+            'C5': 523.25, 'C#5': 554.37, 'D5': 587.33, 'D#5': 622.25,
+            'E5': 659.25, 'F5': 698.46, 'F#5': 739.99, 'G5': 783.99,
+            'G#5': 830.61, 'A5': 880.00, 'A#5': 932.33, 'B5': 987.77,
+            'C6': 1046.50
+        };
+        
+        // 音名表記（ABC表記）
+        this.noteNamesJP = {
+            'C': 'C', 'C#': 'C♯', 'D': 'D', 'D#': 'D♯',
+            'E': 'E', 'F': 'F', 'F#': 'F♯', 'G': 'G',
+            'G#': 'G♯', 'A': 'A', 'A#': 'A♯', 'B': 'B'
+        };
+        
+        // コード定義（構成音）
+        this.chordDefinitions = {
+            // メジャーコード
+            'C': ['C4', 'E4', 'G4'],
+            'D': ['D4', 'F#4', 'A4'],
+            'E': ['E4', 'G#4', 'B4'],
+            'F': ['F4', 'A4', 'C5'],
+            'G': ['G3', 'B3', 'D4'],
+            'A': ['A3', 'C#4', 'E4'],
+            'B': ['B3', 'D#4', 'F#4'],
+            // マイナーコード
+            'Cm': ['C4', 'D#4', 'G4'],
+            'Dm': ['D4', 'F4', 'A4'],
+            'Em': ['E4', 'G4', 'B4'],
+            'Fm': ['F4', 'G#4', 'C5'],
+            'Gm': ['G3', 'A#3', 'D4'],
+            'Am': ['A3', 'C4', 'E4'],
+            'Bm': ['B3', 'D4', 'F#4'],
+            // セブンスコード
+            'C7': ['C4', 'E4', 'G4', 'A#4'],
+            'D7': ['D4', 'F#4', 'A4', 'C5'],
+            'E7': ['E4', 'G#4', 'B4', 'D5'],
+            'F7': ['F4', 'A4', 'C5', 'D#5'],
+            'G7': ['G3', 'B3', 'D4', 'F4'],
+            'A7': ['A3', 'C#4', 'E4', 'G4'],
+            'B7': ['B3', 'D#4', 'F#4', 'A4']
+        };
+        
+        // コード名の日本語表記
+        this.chordNamesJP = {
+            'C': 'Cメジャー', 'D': 'Dメジャー', 'E': 'Eメジャー',
+            'F': 'Fメジャー', 'G': 'Gメジャー', 'A': 'Aメジャー', 'B': 'Bメジャー',
+            'Cm': 'Cマイナー', 'Dm': 'Dマイナー', 'Em': 'Eマイナー',
+            'Fm': 'Fマイナー', 'Gm': 'Gマイナー', 'Am': 'Aマイナー', 'Bm': 'Bマイナー',
+            'C7': 'Cセブン', 'D7': 'Dセブン', 'E7': 'Eセブン',
+            'F7': 'Fセブン', 'G7': 'Gセブン', 'A7': 'Aセブン', 'B7': 'Bセブン'
+        };
+    }
+    
+    async initialize() {
+        if (this.isInitialized) return;
+        try {
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            if (this.audioContext.state === 'suspended') {
+                await this.audioContext.resume();
+            }
+            this.isInitialized = true;
+        } catch (error) {
+            console.error('Failed to initialize AudioEngine:', error);
+        }
+    }
+    
+    playPiano(frequency, duration = 1.5) {
+        if (!this.isInitialized) return;
+        const now = this.audioContext.currentTime;
+        
+        const osc1 = this.audioContext.createOscillator();
+        const osc2 = this.audioContext.createOscillator();
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(frequency, now);
+        osc2.type = 'triangle';
+        osc2.frequency.setValueAtTime(frequency, now);
+        
+        const gain1 = this.audioContext.createGain();
+        const gain2 = this.audioContext.createGain();
+        const masterGain = this.audioContext.createGain();
+        
+        gain1.gain.setValueAtTime(0.5, now);
+        gain2.gain.setValueAtTime(0.3, now);
+        
+        masterGain.gain.setValueAtTime(0, now);
+        masterGain.gain.linearRampToValueAtTime(0.6, now + 0.01);
+        masterGain.gain.exponentialRampToValueAtTime(0.4, now + 0.1);
+        masterGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+        
+        osc1.connect(gain1).connect(masterGain).connect(this.audioContext.destination);
+        osc2.connect(gain2).connect(masterGain);
+        
+        osc1.start(now);
+        osc2.start(now);
+        osc1.stop(now + duration);
+        osc2.stop(now + duration);
+    }
+    
+    playGuitar(frequency, duration = 2) {
+        if (!this.isInitialized) return;
+        const now = this.audioContext.currentTime;
+        
+        const osc = this.audioContext.createOscillator();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(frequency, now);
+        
+        const filter = this.audioContext.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(2000, now);
+        filter.frequency.exponentialRampToValueAtTime(500, now + duration);
+        
+        const masterGain = this.audioContext.createGain();
+        masterGain.gain.setValueAtTime(0, now);
+        masterGain.gain.linearRampToValueAtTime(0.5, now + 0.005);
+        masterGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+        
+        osc.connect(filter).connect(masterGain).connect(this.audioContext.destination);
+        osc.start(now);
+        osc.stop(now + duration);
+    }
+    
+    playNote(note, instrument = 'piano') {
+        const frequency = this.noteFrequencies[note];
+        if (!frequency) return;
+        if (instrument === 'piano') this.playPiano(frequency);
+        else if (instrument === 'guitar') this.playGuitar(frequency);
+    }
+    
+    // コードを再生（複数の音を同時に鳴らす）
+    playChord(chordName, instrument = 'piano') {
+        const notes = this.chordDefinitions[chordName];
+        if (!notes) return;
+        
+        // 各音を少しずらして鳴らす（アルペジオ効果）
+        notes.forEach((note, index) => {
+            setTimeout(() => {
+                const frequency = this.noteFrequencies[note];
+                if (frequency) {
+                    if (instrument === 'piano') {
+                        this.playPianoChordNote(frequency, 2);
+                    } else {
+                        this.playGuitarChordNote(frequency, 2.5);
+                    }
+                }
+            }, index * 30); // 30ms間隔でアルペジオ
+        });
+    }
+    
+    // コード用のピアノ音（音量調整版）
+    playPianoChordNote(frequency, duration = 2) {
+        if (!this.isInitialized) return;
+        const now = this.audioContext.currentTime;
+        
+        const osc1 = this.audioContext.createOscillator();
+        const osc2 = this.audioContext.createOscillator();
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(frequency, now);
+        osc2.type = 'triangle';
+        osc2.frequency.setValueAtTime(frequency, now);
+        
+        const gain1 = this.audioContext.createGain();
+        const gain2 = this.audioContext.createGain();
+        const masterGain = this.audioContext.createGain();
+        
+        gain1.gain.setValueAtTime(0.3, now);
+        gain2.gain.setValueAtTime(0.2, now);
+        
+        masterGain.gain.setValueAtTime(0, now);
+        masterGain.gain.linearRampToValueAtTime(0.4, now + 0.01);
+        masterGain.gain.exponentialRampToValueAtTime(0.25, now + 0.1);
+        masterGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+        
+        osc1.connect(gain1).connect(masterGain).connect(this.audioContext.destination);
+        osc2.connect(gain2).connect(masterGain);
+        
+        osc1.start(now);
+        osc2.start(now);
+        osc1.stop(now + duration);
+        osc2.stop(now + duration);
+    }
+    
+    // コード用のギター音（音量調整版）
+    playGuitarChordNote(frequency, duration = 2.5) {
+        if (!this.isInitialized) return;
+        const now = this.audioContext.currentTime;
+        
+        const osc = this.audioContext.createOscillator();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(frequency, now);
+        
+        const filter = this.audioContext.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(1500, now);
+        filter.frequency.exponentialRampToValueAtTime(400, now + duration);
+        
+        const masterGain = this.audioContext.createGain();
+        masterGain.gain.setValueAtTime(0, now);
+        masterGain.gain.linearRampToValueAtTime(0.3, now + 0.005);
+        masterGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+        
+        osc.connect(filter).connect(masterGain).connect(this.audioContext.destination);
+        osc.start(now);
+        osc.stop(now + duration);
+    }
+    
+    getNoteNameJP(note) {
+        const noteName = note.replace(/[0-9]/g, '');
+        return this.noteNamesJP[noteName] || note;
+    }
+    
+    getChordNameJP(chordName) {
+        return this.chordNamesJP[chordName] || chordName;
+    }
+    
+    getChordNotes(chordName) {
+        return this.chordDefinitions[chordName] || [];
+    }
+    
+    getNotesByDifficulty(difficulty) {
+        switch (difficulty) {
+            case 'easy':
+                return ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5'];
+            case 'medium':
+                return ['C3', 'D3', 'E3', 'F3', 'G3', 'A3', 'B3', 'C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5'];
+            case 'hard':
+                return ['C4', 'C#4', 'D4', 'D#4', 'E4', 'F4', 'F#4', 'G4', 'G#4', 'A4', 'A#4', 'B4', 'C5'];
+            default:
+                return this.getNotesByDifficulty('easy');
+        }
+    }
+    
+    getChordsByDifficulty(difficulty) {
+        switch (difficulty) {
+            case 'easy':
+                // メジャーコードのみ（7つの基本メジャーコード）
+                return ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+            case 'medium':
+                // メジャー + マイナー
+                return ['C', 'D', 'E', 'F', 'G', 'A', 'B', 'Am', 'Dm', 'Em', 'Bm'];
+            case 'hard':
+                // メジャー + マイナー + セブンス
+                return ['C', 'D', 'E', 'F', 'G', 'A', 'B', 'Am', 'Dm', 'Em', 'Bm', 'C7', 'G7', 'D7', 'A7', 'B7'];
+            default:
+                return this.getChordsByDifficulty('easy');
+        }
+    }
+}
+
+const audioEngine = new AudioEngine();
+
