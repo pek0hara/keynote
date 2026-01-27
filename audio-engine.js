@@ -7,7 +7,23 @@ class AudioEngine {
     constructor() {
         this.audioContext = null;
         this.isInitialized = false;
-        
+
+        // メトロノーム関連
+        this.metronomeInterval = null;
+        this.metronomeBpm = 100;
+        this.metronomeCallback = null;
+
+        // ベースモード用の低音周波数（E1-E3）
+        this.bassNoteFrequencies = {
+            'E1': 41.20, 'F1': 43.65, 'F#1': 46.25, 'G1': 49.00,
+            'G#1': 51.91, 'A1': 55.00, 'A#1': 58.27, 'B1': 61.74,
+            'C2': 65.41, 'C#2': 69.30, 'D2': 73.42, 'D#2': 77.78,
+            'E2': 82.41, 'F2': 87.31, 'F#2': 92.50, 'G2': 98.00,
+            'G#2': 103.83, 'A2': 110.00, 'A#2': 116.54, 'B2': 123.47,
+            'C3': 130.81, 'C#3': 138.59, 'D3': 146.83, 'D#3': 155.56,
+            'E3': 164.81
+        };
+
         // 音階の周波数（A4 = 440Hz基準）
         this.noteFrequencies = {
             'C3': 130.81, 'C#3': 138.59, 'D3': 146.83, 'D#3': 155.56,
@@ -145,24 +161,115 @@ class AudioEngine {
     playGuitar(frequency, duration = 2) {
         if (!this.isInitialized) return;
         const now = this.audioContext.currentTime;
-        
+
         const osc = this.audioContext.createOscillator();
         osc.type = 'sawtooth';
         osc.frequency.setValueAtTime(frequency, now);
-        
+
         const filter = this.audioContext.createBiquadFilter();
         filter.type = 'lowpass';
         filter.frequency.setValueAtTime(2000, now);
         filter.frequency.exponentialRampToValueAtTime(500, now + duration);
-        
+
         const masterGain = this.audioContext.createGain();
         masterGain.gain.setValueAtTime(0, now);
         masterGain.gain.linearRampToValueAtTime(0.5, now + 0.005);
         masterGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-        
+
         osc.connect(filter).connect(masterGain).connect(this.audioContext.destination);
         osc.start(now);
         osc.stop(now + duration);
+    }
+
+    // ベース音を再生（低音に最適化）
+    playBass(frequency, duration = 1.5) {
+        if (!this.isInitialized) return;
+        const now = this.audioContext.currentTime;
+
+        // サイン波とトライアングル波を組み合わせて太い低音を生成
+        const osc1 = this.audioContext.createOscillator();
+        const osc2 = this.audioContext.createOscillator();
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(frequency, now);
+        osc2.type = 'triangle';
+        osc2.frequency.setValueAtTime(frequency, now);
+
+        // ローパスフィルターで高音をカット
+        const filter = this.audioContext.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(800, now);
+        filter.Q.setValueAtTime(1, now);
+
+        const gain1 = this.audioContext.createGain();
+        const gain2 = this.audioContext.createGain();
+        const masterGain = this.audioContext.createGain();
+
+        gain1.gain.setValueAtTime(0.6, now);
+        gain2.gain.setValueAtTime(0.3, now);
+
+        // エンベロープ
+        masterGain.gain.setValueAtTime(0, now);
+        masterGain.gain.linearRampToValueAtTime(0.7, now + 0.02);
+        masterGain.gain.exponentialRampToValueAtTime(0.5, now + 0.1);
+        masterGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+        osc1.connect(gain1).connect(filter).connect(masterGain).connect(this.audioContext.destination);
+        osc2.connect(gain2).connect(filter);
+
+        osc1.start(now);
+        osc2.start(now);
+        osc1.stop(now + duration);
+        osc2.stop(now + duration);
+    }
+
+    // メトロノームのクリック音
+    playMetronomeClick(isAccent = false) {
+        if (!this.isInitialized) return;
+        const now = this.audioContext.currentTime;
+
+        const osc = this.audioContext.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(isAccent ? 1000 : 800, now);
+
+        const gain = this.audioContext.createGain();
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(isAccent ? 0.3 : 0.2, now + 0.001);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+
+        osc.connect(gain).connect(this.audioContext.destination);
+        osc.start(now);
+        osc.stop(now + 0.05);
+    }
+
+    // メトロノーム開始
+    startMetronome(bpm, callback, beatsPerMeasure = 4) {
+        this.stopMetronome();
+        this.metronomeBpm = bpm;
+        this.metronomeCallback = callback;
+
+        const interval = (60 / bpm) * 1000;
+        let beatCount = 0;
+
+        const tick = () => {
+            const isAccent = beatCount % beatsPerMeasure === 0;
+            this.playMetronomeClick(isAccent);
+            if (this.metronomeCallback) {
+                this.metronomeCallback(beatCount, isAccent);
+            }
+            beatCount++;
+        };
+
+        tick(); // 最初の拍を即座に再生
+        this.metronomeInterval = setInterval(tick, interval);
+    }
+
+    // メトロノーム停止
+    stopMetronome() {
+        if (this.metronomeInterval) {
+            clearInterval(this.metronomeInterval);
+            this.metronomeInterval = null;
+        }
+        this.metronomeCallback = null;
     }
     
     playNote(note, instrument = 'piano') {
@@ -170,6 +277,27 @@ class AudioEngine {
         if (!frequency) return;
         if (instrument === 'piano') this.playPiano(frequency);
         else if (instrument === 'guitar') this.playGuitar(frequency);
+        else if (instrument === 'bass') this.playBass(frequency);
+    }
+
+    // ベースノートを再生（ベースモード用）
+    playBassNote(note) {
+        const frequency = this.bassNoteFrequencies[note] || this.noteFrequencies[note];
+        if (!frequency) return;
+        this.playBass(frequency);
+    }
+
+    // コードのルート音を取得
+    getChordRoot(chordName) {
+        // コード名からルート音を抽出（例: "Am" → "A", "C7" → "C"）
+        const root = chordName.replace(/m|7/g, '');
+        return root;
+    }
+
+    // ルート音のベース周波数を取得（オクターブ2）
+    getRootBassNote(chordName) {
+        const root = this.getChordRoot(chordName);
+        return root + '2'; // オクターブ2のルート音
     }
     
     // コードを再生（複数の音を同時に鳴らす）

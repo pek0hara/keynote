@@ -1181,3 +1181,297 @@ body {
         height: 160px;
     }
 }
+
+/* ========== ベースモードUI ========== */
+.bass-mode-ui {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-lg);
+}
+
+.bass-mode-ui.hidden {
+    display: none;
+}
+
+/* コード進行表示 */
+.chord-progression-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-lg);
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-lg);
+    min-width: 200px;
+}
+
+.current-chord-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.chord-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.chord-name {
+    font-size: 3rem;
+    font-weight: 700;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: chord-pulse 0.5s ease;
+}
+
+@keyframes chord-pulse {
+    0% { transform: scale(0.9); opacity: 0.5; }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* ビートインジケーター */
+.beat-indicator {
+    display: flex;
+    gap: var(--spacing-md);
+}
+
+.beat-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    transition: all var(--transition-fast);
+}
+
+.beat-dot.active {
+    background: var(--primary-gradient);
+    border-color: var(--piano-color);
+    box-shadow: 0 0 15px rgba(102, 126, 234, 0.6);
+    transform: scale(1.2);
+}
+
+.progression-info {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+/* ベースフレットボード */
+.bass-fretboard {
+    display: flex;
+    justify-content: center;
+}
+
+.bass-fretboard-container {
+    display: flex;
+    gap: 0;
+    background: linear-gradient(180deg, #3e2723 0%, #5d4037 20%, #3e2723 100%);
+    border-radius: var(--radius-lg);
+    padding: 12px;
+    box-shadow:
+        0 10px 30px rgba(0, 0, 0, 0.5),
+        inset 0 2px 4px rgba(255, 255, 255, 0.1);
+}
+
+.bass-string-labels {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    padding-right: 8px;
+    min-width: 70px;
+}
+
+.bass-string-labels span {
+    font-size: 0.65rem;
+    color: rgba(255, 255, 255, 0.7);
+    text-align: right;
+    padding: 8px 0;
+}
+
+.bass-fretboard-grid {
+    display: flex;
+    gap: 0;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.bass-fret-column {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    position: relative;
+    border-right: 3px solid #9e9e9e;
+    background: linear-gradient(90deg,
+        rgba(0,0,0,0.1) 0%,
+        transparent 50%,
+        rgba(0,0,0,0.1) 100%
+    );
+}
+
+.bass-fret-column.nut-column {
+    border-right: 6px solid #f5f5dc;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.bass-fret-column.nut-column .bass-fret-position {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.bass-fret-position {
+    width: 60px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    position: relative;
+}
+
+/* ベース弦のビジュアル（太め） */
+.bass-fret-position::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    background: linear-gradient(90deg,
+        rgba(200, 200, 200, 0.6),
+        rgba(255, 255, 255, 0.9),
+        rgba(200, 200, 200, 0.6)
+    );
+}
+
+/* ベース弦の太さ */
+.bass-fret-position[data-string="1"]::after { height: 2px; }
+.bass-fret-position[data-string="2"]::after {
+    height: 3px;
+    background: linear-gradient(90deg, #b8860b, #daa520, #b8860b);
+}
+.bass-fret-position[data-string="3"]::after {
+    height: 4px;
+    background: linear-gradient(90deg, #b8860b, #daa520, #b8860b);
+}
+.bass-fret-position[data-string="4"]::after {
+    height: 5px;
+    background: linear-gradient(90deg, #b8860b, #daa520, #b8860b);
+}
+
+.bass-fret-position span {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.5);
+    font-weight: 600;
+    z-index: 1;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+}
+
+.bass-fret-position:hover {
+    background: rgba(102, 126, 234, 0.3);
+}
+
+.bass-fret-position:hover span {
+    opacity: 1;
+    color: white;
+}
+
+.bass-fret-position:hover::after {
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+}
+
+.bass-fret-position:active {
+    background: rgba(102, 126, 234, 0.5);
+}
+
+.bass-fret-position.playing {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.6) 0%, rgba(118, 75, 162, 0.6) 100%);
+}
+
+.bass-fret-position.playing span {
+    opacity: 1;
+    color: white;
+}
+
+.bass-fret-position.playing::after {
+    animation: bass-string-vibrate 0.06s ease-in-out 8;
+    box-shadow: 0 0 15px rgba(102, 126, 234, 0.8);
+}
+
+.bass-fret-position.correct {
+    background: linear-gradient(135deg, rgba(17, 153, 142, 0.6) 0%, rgba(56, 239, 125, 0.6) 100%);
+}
+
+.bass-fret-position.correct span {
+    opacity: 1;
+    color: white;
+}
+
+.bass-fret-position.wrong {
+    background: linear-gradient(135deg, rgba(235, 51, 73, 0.6) 0%, rgba(244, 92, 67, 0.6) 100%);
+}
+
+.bass-fret-position.wrong span {
+    opacity: 1;
+    color: white;
+}
+
+@keyframes bass-string-vibrate {
+    0%, 100% { transform: translateY(-50%); }
+    25% { transform: translateY(calc(-50% - 4px)); }
+    75% { transform: translateY(calc(-50% + 4px)); }
+}
+
+/* ベースフレットマーカードット */
+.bass-fret-marker-dot {
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 10px;
+    height: 10px;
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 50%;
+}
+
+/* モードセレクターの3列対応 */
+.mode-selector {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-sm);
+}
+
+/* 回答セクション非表示用 */
+.answer-section.hidden {
+    display: none;
+}
+
+/* ベースモードのモバイル対応 */
+@media (max-width: 640px) {
+    .bass-fretboard-container {
+        transform: scale(0.85);
+        transform-origin: top center;
+    }
+
+    .chord-name {
+        font-size: 2.5rem;
+    }
+
+    .mode-selector {
+        grid-template-columns: 1fr;
+    }
+
+    .beat-dot {
+        width: 14px;
+        height: 14px;
+    }
+}

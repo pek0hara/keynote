@@ -67,6 +67,11 @@
                                 <span class="mode-name">コードモード</span>
                                 <span class="mode-desc">和音を当てる</span>
                             </button>
+                            <button class="mode-btn" data-mode="bass" id="btn-bass">
+                                <span class="mode-icon">🎸</span>
+                                <span class="mode-name">ベースモード</span>
+                                <span class="mode-desc">ルート音を弾く</span>
+                            </button>
                         </div>
                     </div>
 
@@ -246,6 +251,86 @@
                                         <div class="fret-position" data-string="5" data-fret="5" data-note="D4"><span>D</span></div>
                                         <div class="fret-position" data-string="6" data-fret="5" data-note="A3"><span>A</span></div>
                                         <div class="fret-marker-dot"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ベースモードUI -->
+                        <div class="bass-mode-ui hidden" id="bass-mode-ui">
+                            <!-- コード進行表示 -->
+                            <div class="chord-progression-display">
+                                <div class="current-chord-display">
+                                    <span class="chord-label">現在のコード</span>
+                                    <span class="chord-name" id="current-chord-name">C</span>
+                                </div>
+                                <div class="beat-indicator">
+                                    <span class="beat-dot" data-beat="0"></span>
+                                    <span class="beat-dot" data-beat="1"></span>
+                                    <span class="beat-dot" data-beat="2"></span>
+                                    <span class="beat-dot" data-beat="3"></span>
+                                </div>
+                                <div class="progression-info">
+                                    <span id="progression-position">1 / 4</span>
+                                </div>
+                            </div>
+
+                            <!-- ベースフレットボード（4弦） -->
+                            <div class="bass-fretboard" id="bass-fretboard">
+                                <div class="bass-fretboard-container">
+                                    <!-- 弦のラベル -->
+                                    <div class="bass-string-labels">
+                                        <span>1弦 (G)</span>
+                                        <span>2弦 (D)</span>
+                                        <span>3弦 (A)</span>
+                                        <span>4弦 (E)</span>
+                                    </div>
+                                    <!-- フレットボードグリッド -->
+                                    <div class="bass-fretboard-grid">
+                                        <!-- ナット（開放弦） -->
+                                        <div class="bass-fret-column nut-column">
+                                            <div class="bass-fret-position" data-string="1" data-fret="0" data-note="G2"><span>G</span></div>
+                                            <div class="bass-fret-position" data-string="2" data-fret="0" data-note="D2"><span>D</span></div>
+                                            <div class="bass-fret-position" data-string="3" data-fret="0" data-note="A1"><span>A</span></div>
+                                            <div class="bass-fret-position" data-string="4" data-fret="0" data-note="E1"><span>E</span></div>
+                                        </div>
+                                        <!-- 1フレット -->
+                                        <div class="bass-fret-column">
+                                            <div class="bass-fret-position" data-string="1" data-fret="1" data-note="G#2"><span>G♯</span></div>
+                                            <div class="bass-fret-position" data-string="2" data-fret="1" data-note="D#2"><span>D♯</span></div>
+                                            <div class="bass-fret-position" data-string="3" data-fret="1" data-note="A#1"><span>A♯</span></div>
+                                            <div class="bass-fret-position" data-string="4" data-fret="1" data-note="F1"><span>F</span></div>
+                                        </div>
+                                        <!-- 2フレット -->
+                                        <div class="bass-fret-column">
+                                            <div class="bass-fret-position" data-string="1" data-fret="2" data-note="A2"><span>A</span></div>
+                                            <div class="bass-fret-position" data-string="2" data-fret="2" data-note="E2"><span>E</span></div>
+                                            <div class="bass-fret-position" data-string="3" data-fret="2" data-note="B1"><span>B</span></div>
+                                            <div class="bass-fret-position" data-string="4" data-fret="2" data-note="F#1"><span>F♯</span></div>
+                                        </div>
+                                        <!-- 3フレット -->
+                                        <div class="bass-fret-column has-marker">
+                                            <div class="bass-fret-position" data-string="1" data-fret="3" data-note="A#2"><span>A♯</span></div>
+                                            <div class="bass-fret-position" data-string="2" data-fret="3" data-note="F2"><span>F</span></div>
+                                            <div class="bass-fret-position" data-string="3" data-fret="3" data-note="C2"><span>C</span></div>
+                                            <div class="bass-fret-position" data-string="4" data-fret="3" data-note="G1"><span>G</span></div>
+                                            <div class="bass-fret-marker-dot"></div>
+                                        </div>
+                                        <!-- 4フレット -->
+                                        <div class="bass-fret-column">
+                                            <div class="bass-fret-position" data-string="1" data-fret="4" data-note="B2"><span>B</span></div>
+                                            <div class="bass-fret-position" data-string="2" data-fret="4" data-note="F#2"><span>F♯</span></div>
+                                            <div class="bass-fret-position" data-string="3" data-fret="4" data-note="C#2"><span>C♯</span></div>
+                                            <div class="bass-fret-position" data-string="4" data-fret="4" data-note="G#1"><span>G♯</span></div>
+                                        </div>
+                                        <!-- 5フレット -->
+                                        <div class="bass-fret-column has-marker">
+                                            <div class="bass-fret-position" data-string="1" data-fret="5" data-note="C3"><span>C</span></div>
+                                            <div class="bass-fret-position" data-string="2" data-fret="5" data-note="G2"><span>G</span></div>
+                                            <div class="bass-fret-position" data-string="3" data-fret="5" data-note="D2"><span>D</span></div>
+                                            <div class="bass-fret-position" data-string="4" data-fret="5" data-note="A1"><span>A</span></div>
+                                            <div class="bass-fret-marker-dot"></div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
