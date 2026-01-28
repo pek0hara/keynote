@@ -13,6 +13,42 @@ class AudioEngine {
         this.metronomeBpm = 100;
         this.metronomeCallback = null;
 
+        // ドラムパターン定義
+        this.drumPatterns = {
+            // 基本的な8ビートパターン
+            'basic8': {
+                name: '8ビート',
+                beats: 8,
+                kick:   [1, 0, 0, 0, 1, 0, 0, 0], // キック
+                snare:  [0, 0, 1, 0, 0, 0, 1, 0], // スネア
+                hihat:  [1, 1, 1, 1, 1, 1, 1, 1]  // ハイハット
+            },
+            // 基本的な16ビートパターン
+            'basic16': {
+                name: '16ビート',
+                beats: 16,
+                kick:   [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
+                snare:  [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+                hihat:  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+            },
+            // ロックビート
+            'rock': {
+                name: 'ロック',
+                beats: 8,
+                kick:   [1, 0, 0, 1, 1, 0, 0, 0],
+                snare:  [0, 0, 1, 0, 0, 0, 1, 0],
+                hihat:  [1, 1, 1, 1, 1, 1, 1, 1]
+            },
+            // ファンクビート
+            'funk': {
+                name: 'ファンク',
+                beats: 16,
+                kick:   [1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0],
+                snare:  [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1],
+                hihat:  [1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1]
+            }
+        };
+
         // ベースモード用の低音周波数（E1-E3）
         this.bassNoteFrequencies = {
             'E1': 41.20, 'F1': 43.65, 'F#1': 46.25, 'G1': 49.00,
@@ -271,7 +307,132 @@ class AudioEngine {
         }
         this.metronomeCallback = null;
     }
-    
+
+    // ドラム音声生成 - キック（バスドラム）
+    playKick() {
+        if (!this.isInitialized) return;
+        const now = this.audioContext.currentTime;
+
+        // オシレーターでキックのトーンを生成
+        const osc = this.audioContext.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(150, now);
+        osc.frequency.exponentialRampToValueAtTime(40, now + 0.1);
+
+        const gain = this.audioContext.createGain();
+        gain.gain.setValueAtTime(1, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+
+        osc.connect(gain).connect(this.audioContext.destination);
+        osc.start(now);
+        osc.stop(now + 0.3);
+    }
+
+    // ドラム音声生成 - スネア
+    playSnare() {
+        if (!this.isInitialized) return;
+        const now = this.audioContext.currentTime;
+
+        // ノイズでスネアを生成
+        const bufferSize = this.audioContext.sampleRate * 0.2;
+        const buffer = this.audioContext.createBuffer(1, bufferSize, this.audioContext.sampleRate);
+        const output = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+            output[i] = Math.random() * 2 - 1;
+        }
+
+        const noise = this.audioContext.createBufferSource();
+        noise.buffer = buffer;
+
+        // ハイパスフィルターでスネアらしいサウンドに
+        const filter = this.audioContext.createBiquadFilter();
+        filter.type = 'highpass';
+        filter.frequency.setValueAtTime(1000, now);
+
+        const gain = this.audioContext.createGain();
+        gain.gain.setValueAtTime(0.8, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+
+        // トーン部分
+        const osc = this.audioContext.createOscillator();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(200, now);
+        osc.frequency.exponentialRampToValueAtTime(100, now + 0.05);
+
+        const oscGain = this.audioContext.createGain();
+        oscGain.gain.setValueAtTime(0.5, now);
+        oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+
+        noise.connect(filter).connect(gain).connect(this.audioContext.destination);
+        osc.connect(oscGain).connect(this.audioContext.destination);
+
+        noise.start(now);
+        noise.stop(now + 0.2);
+        osc.start(now);
+        osc.stop(now + 0.1);
+    }
+
+    // ドラム音声生成 - ハイハット（クローズ）
+    playHihat(open = false) {
+        if (!this.isInitialized) return;
+        const now = this.audioContext.currentTime;
+
+        const duration = open ? 0.3 : 0.08;
+
+        // ノイズでハイハットを生成
+        const bufferSize = this.audioContext.sampleRate * duration;
+        const buffer = this.audioContext.createBuffer(1, bufferSize, this.audioContext.sampleRate);
+        const output = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+            output[i] = Math.random() * 2 - 1;
+        }
+
+        const noise = this.audioContext.createBufferSource();
+        noise.buffer = buffer;
+
+        // バンドパスフィルターでハイハットらしいサウンドに
+        const filter = this.audioContext.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(10000, now);
+        filter.Q.setValueAtTime(1, now);
+
+        const gain = this.audioContext.createGain();
+        gain.gain.setValueAtTime(open ? 0.4 : 0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+        noise.connect(filter).connect(gain).connect(this.audioContext.destination);
+        noise.start(now);
+        noise.stop(now + duration);
+    }
+
+    // ドラム音を再生（種類を指定）
+    playDrum(type) {
+        switch (type) {
+            case 'kick':
+                this.playKick();
+                break;
+            case 'snare':
+                this.playSnare();
+                break;
+            case 'hihat':
+                this.playHihat(false);
+                break;
+            case 'hihat-open':
+                this.playHihat(true);
+                break;
+        }
+    }
+
+    // ドラムパターンを取得
+    getDrumPattern(patternName) {
+        return this.drumPatterns[patternName] || this.drumPatterns['basic8'];
+    }
+
+    // 利用可能なドラムパターン名のリストを取得
+    getAvailableDrumPatterns() {
+        return Object.keys(this.drumPatterns);
+    }
+
     playNote(note, instrument = 'piano') {
         const frequency = this.noteFrequencies[note];
         if (!frequency) return;

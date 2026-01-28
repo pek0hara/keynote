@@ -54,6 +54,10 @@
                                 <span class="instrument-icon">🎸</span>
                                 <span class="instrument-name">ベース</span>
                             </button>
+                            <button class="instrument-btn" data-instrument="drum" id="btn-drum">
+                                <span class="instrument-icon">🥁</span>
+                                <span class="instrument-name">ドラム</span>
+                            </button>
                         </div>
                     </div>
 
@@ -331,6 +335,51 @@
                                             <div class="bass-fret-marker-dot"></div>
                                         </div>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ドラムモードUI -->
+                        <div class="drum-mode-ui hidden" id="drum-mode-ui">
+                            <!-- パターン情報表示 -->
+                            <div class="drum-pattern-display">
+                                <div class="pattern-info">
+                                    <span class="pattern-label">パターン</span>
+                                    <span class="pattern-name" id="current-pattern-name">8ビート</span>
+                                </div>
+                                <div class="drum-bpm" id="drum-bpm-display">BPM: 100</div>
+                                <div class="drum-beat-indicator" id="drum-beat-indicator">
+                                    <span class="drum-beat-dot" data-beat="0"></span>
+                                    <span class="drum-beat-dot" data-beat="1"></span>
+                                    <span class="drum-beat-dot" data-beat="2"></span>
+                                    <span class="drum-beat-dot" data-beat="3"></span>
+                                    <span class="drum-beat-dot" data-beat="4"></span>
+                                    <span class="drum-beat-dot" data-beat="5"></span>
+                                    <span class="drum-beat-dot" data-beat="6"></span>
+                                    <span class="drum-beat-dot" data-beat="7"></span>
+                                </div>
+                                <div class="drum-progress-info">
+                                    <span id="drum-progress">1 / 16</span>
+                                </div>
+                            </div>
+
+                            <!-- ドラムパッド -->
+                            <div class="drum-pads" id="drum-pads">
+                                <div class="drum-pad-row">
+                                    <button class="drum-pad hihat-pad" data-drum="hihat">
+                                        <span class="pad-icon">🎵</span>
+                                        <span class="pad-name">ハイハット</span>
+                                    </button>
+                                    <button class="drum-pad snare-pad" data-drum="snare">
+                                        <span class="pad-icon">🔔</span>
+                                        <span class="pad-name">スネア</span>
+                                    </button>
+                                </div>
+                                <div class="drum-pad-row">
+                                    <button class="drum-pad kick-pad" data-drum="kick">
+                                        <span class="pad-icon">🔊</span>
+                                        <span class="pad-name">キック</span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
