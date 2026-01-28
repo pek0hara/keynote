@@ -49,6 +49,12 @@ class AudioEngine {
             }
         };
 
+        // ギター指板で有効な音（0-5フレット: E3〜A4）
+        this.guitarValidNotes = [
+            'E3', 'F3', 'F#3', 'G3', 'G#3', 'A3', 'A#3', 'B3',
+            'C4', 'C#4', 'D4', 'D#4', 'E4', 'F4', 'F#4', 'G4', 'G#4', 'A4'
+        ];
+
         // ベースモード用の低音周波数（E1-E3）
         this.bassNoteFrequencies = {
             'E1': 41.20, 'F1': 43.65, 'F#1': 46.25, 'G1': 49.00,
@@ -566,6 +572,12 @@ class AudioEngine {
             default:
                 return this.getNotesByDifficulty('easy');
         }
+    }
+
+    // ギター指板に存在する音のみを返す
+    getGuitarNotesByDifficulty(difficulty) {
+        const notes = this.getNotesByDifficulty(difficulty);
+        return notes.filter(note => this.guitarValidNotes.includes(note));
     }
     
     getChordsByDifficulty(difficulty) {
