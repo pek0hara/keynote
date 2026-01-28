@@ -617,8 +617,19 @@ class AudioEngine {
 
     // ギター指板に存在する音のみを返す
     getGuitarNotesByDifficulty(difficulty) {
-        const notes = this.getNotesByDifficulty(difficulty);
-        return notes.filter(note => this.guitarValidNotes.includes(note));
+        switch (difficulty) {
+            case 'easy':
+                // ギター指板上の基本音（シャープなし）
+                return ['E3', 'F3', 'G3', 'A3', 'B3', 'C4', 'D4', 'E4', 'F4', 'G4', 'A4'];
+            case 'medium':
+                // ギター指板上の基本音（シャープなし）
+                return ['E3', 'F3', 'G3', 'A3', 'B3', 'C4', 'D4', 'E4', 'F4', 'G4', 'A4'];
+            case 'hard':
+                // ギター指板上の全ての音（シャープ含む）
+                return [...this.guitarValidNotes];
+            default:
+                return this.getGuitarNotesByDifficulty('easy');
+        }
     }
     
     getChordsByDifficulty(difficulty) {
