@@ -1264,11 +1264,11 @@ class Game {
                     }
                 });
 
-                this.showFeedback(false, expectedChord);
+                this.showFeedback(false, expectedChord, this.currentChordsSequence);
                 this.streak = 0;
                 this.sequenceLength = 3; // シーケンス長を3にリセット
 
-                setTimeout(() => this.nextQuestion(), 1500);
+                setTimeout(() => this.nextQuestion(), 2000);
                 return;
             }
 
@@ -1330,12 +1330,12 @@ class Game {
                         btn.classList.add('correct');
                     }
                 });
-                
-                this.showFeedback(false, expectedNote);
+
+                this.showFeedback(false, expectedNote, this.currentNotesSequence);
                 this.streak = 0;
                 this.sequenceLength = 3; // シーケンス長を3にリセット
-                
-                setTimeout(() => this.nextQuestion(), 1500);
+
+                setTimeout(() => this.nextQuestion(), 2000);
                 return;
             }
             
@@ -1368,7 +1368,7 @@ class Game {
         }
     }
     
-    showFeedback(isCorrect, correctAnswer) {
+    showFeedback(isCorrect, correctAnswer, fullSequence = null) {
         const feedback = document.getElementById('feedback-display');
         const icon = document.getElementById('feedback-icon');
         const text = document.getElementById('feedback-text');
@@ -1376,13 +1376,27 @@ class Game {
         icon.className = 'feedback-icon ' + (isCorrect ? 'correct' : 'wrong');
         icon.textContent = isCorrect ? '✓' : '✗';
 
-        if (this.instrument === 'bass') {
+        if (isCorrect) {
+            text.textContent = '正解！';
+        } else if (fullSequence && fullSequence.length > 1) {
+            // 連続問題で不正解の場合、全シーケンスを表示
+            let sequenceText;
+            if (this.gameMode === 'chord') {
+                sequenceText = fullSequence.join(' → ');
+            } else {
+                sequenceText = fullSequence.map(note => {
+                    const noteName = note.replace(/[0-9]/g, '');
+                    return audioEngine.getNoteNameJP(noteName);
+                }).join(' → ');
+            }
+            text.textContent = `正解: ${sequenceText}`;
+        } else if (this.instrument === 'bass') {
             // ベース楽器の場合
-            text.textContent = isCorrect ? '正解！' : correctAnswer;
+            text.textContent = correctAnswer;
         } else if (this.gameMode === 'chord') {
-            text.textContent = isCorrect ? '正解！' : `正解は ${correctAnswer}`;
+            text.textContent = `正解は ${correctAnswer}`;
         } else {
-            text.textContent = isCorrect ? '正解！' : `正解は ${audioEngine.getNoteNameJP(correctAnswer)}`;
+            text.textContent = `正解は ${audioEngine.getNoteNameJP(correctAnswer)}`;
         }
 
         feedback.classList.remove('hidden');
