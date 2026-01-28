@@ -34,6 +34,17 @@ class Game {
         this.bassUserInputs = []; // ユーザーの入力履歴
         this.bassExpectedRoots = []; // 期待されるルート音
 
+        // ドラムモード用
+        this.drumPattern = null; // 現在のドラムパターン
+        this.drumPatternName = 'basic8'; // パターン名
+        this.drumBpm = 100; // BPM
+        this.drumBeatCount = 0; // 現在のビートカウント
+        this.drumIsPlaying = false; // 再生中フラグ
+        this.drumUserInputs = []; // ユーザーの入力履歴
+        this.drumExpectedBeats = []; // 期待される入力タイミング
+        this.drumMeasures = 2; // 小節数
+        this.drumInterval = null; // ドラムパターン再生用インターバル
+
         this.init();
     }
     
@@ -50,6 +61,8 @@ class Game {
         this.guitarFretboard = document.getElementById('guitar-fretboard');
         this.bassModeUI = document.getElementById('bass-mode-ui');
         this.bassFretboard = document.getElementById('bass-fretboard');
+        this.drumModeUI = document.getElementById('drum-mode-ui');
+        this.drumPads = document.getElementById('drum-pads');
 
         // ボタンイベント
         document.querySelectorAll('.instrument-btn').forEach(btn => {
@@ -78,6 +91,9 @@ class Game {
 
         // ベースフレットボードイベント
         this.initBassFretboard();
+
+        // ドラムパッドイベント
+        this.initDrumPads();
     }
     
     initPianoKeyboard() {
@@ -104,6 +120,30 @@ class Game {
         document.querySelectorAll('.bass-fret-position').forEach(position => {
             position.addEventListener('click', () => this.playBassPosition(position));
         });
+    }
+
+    initDrumPads() {
+        // ドラムパッドの各パッドにイベントを追加
+        document.querySelectorAll('.drum-pad').forEach(pad => {
+            pad.addEventListener('click', () => this.playDrumPad(pad));
+        });
+    }
+
+    playDrumPad(pad) {
+        const drumType = pad.dataset.drum;
+        if (!drumType) return;
+
+        // ドラム音を再生
+        audioEngine.playDrum(drumType);
+
+        // ビジュアルフィードバック
+        pad.classList.add('playing');
+        setTimeout(() => pad.classList.remove('playing'), 150);
+
+        // ドラム楽器でゲーム中の場合、回答をチェック
+        if (this.instrument === 'drum' && this.drumIsPlaying) {
+            this.checkDrumAnswer(drumType);
+        }
     }
 
     playBassPosition(position) {
@@ -201,7 +241,11 @@ class Game {
         const mediumDesc = document.getElementById('difficulty-medium-desc');
         const hardDesc = document.getElementById('difficulty-hard-desc');
 
-        if (this.instrument === 'bass') {
+        if (this.instrument === 'drum') {
+            easyDesc.textContent = '8ビート・BPM80';
+            mediumDesc.textContent = 'ロック・BPM100';
+            hardDesc.textContent = 'ファンク・BPM120';
+        } else if (this.instrument === 'bass') {
             easyDesc.textContent = '4コード・BPM80';
             mediumDesc.textContent = '6コード・BPM100';
             hardDesc.textContent = '8コード・BPM120';
@@ -237,7 +281,14 @@ class Game {
         this.bassIsPlaying = false;
         this.bassUserInputs = [];
 
-        if (this.instrument === 'bass') {
+        // ドラムモードの初期化
+        this.drumIsPlaying = false;
+        this.drumUserInputs = [];
+
+        if (this.instrument === 'drum') {
+            // ドラム楽器選択時
+            this.setupDrumMode();
+        } else if (this.instrument === 'bass') {
             // ベース楽器選択時
             this.availableChords = audioEngine.getChordsByDifficulty(this.difficulty);
             this.setupBassMode();
@@ -273,20 +324,53 @@ class Game {
                 break;
         }
     }
+
+    setupDrumMode() {
+        // 難易度に応じた設定
+        switch (this.difficulty) {
+            case 'easy':
+                this.drumPatternName = 'basic8';
+                this.drumBpm = 80;
+                this.drumMeasures = 2;
+                break;
+            case 'medium':
+                this.drumPatternName = 'rock';
+                this.drumBpm = 100;
+                this.drumMeasures = 2;
+                break;
+            case 'hard':
+                this.drumPatternName = 'funk';
+                this.drumBpm = 120;
+                this.drumMeasures = 2;
+                break;
+        }
+        this.drumPattern = audioEngine.getDrumPattern(this.drumPatternName);
+    }
     
 
     
     updateInstrumentVisual() {
+        // ドラム楽器の場合
+        if (this.instrument === 'drum') {
+            this.pianoKeyboard.classList.add('hidden');
+            this.guitarFretboard.classList.add('hidden');
+            this.bassModeUI.classList.add('hidden');
+            this.drumModeUI.classList.remove('hidden');
+            return;
+        }
+
         // ベース楽器の場合
         if (this.instrument === 'bass') {
             this.pianoKeyboard.classList.add('hidden');
             this.guitarFretboard.classList.add('hidden');
+            this.drumModeUI.classList.add('hidden');
             this.bassModeUI.classList.remove('hidden');
             return;
         }
 
         // ピアノかギターかでビジュアルを切り替え
         this.bassModeUI.classList.add('hidden');
+        this.drumModeUI.classList.add('hidden');
         if (this.instrument === 'piano') {
             this.pianoKeyboard.classList.remove('hidden');
             this.guitarFretboard.classList.add('hidden');
@@ -316,6 +400,12 @@ class Game {
         const grid = document.getElementById('answer-grid');
         const answerSection = document.querySelector('.answer-section');
         grid.innerHTML = '';
+
+        // ドラム楽器では回答ボタンを非表示
+        if (this.instrument === 'drum') {
+            answerSection.classList.add('hidden');
+            return;
+        }
 
         // ベース楽器では回答ボタンを非表示
         if (this.instrument === 'bass') {
@@ -359,12 +449,27 @@ class Game {
         document.getElementById('feedback-display').classList.add('hidden');
 
         if (this.questionNumber > this.totalQuestions) {
+            // ドラム楽器の場合はパターン再生を停止
+            if (this.instrument === 'drum') {
+                this.stopDrumMode();
+            }
             // ベース楽器の場合はメトロノームを停止
             if (this.instrument === 'bass') {
                 audioEngine.stopMetronome();
                 this.bassIsPlaying = false;
             }
             this.showResults();
+            return;
+        }
+
+        // ドラム楽器の場合
+        if (this.instrument === 'drum') {
+            this.setupDrumQuestion();
+            this.updateDrumUI();
+            document.getElementById('current-score').textContent = this.score;
+            document.getElementById('current-streak').textContent = this.streak;
+            document.getElementById('question-number').textContent = `${this.questionNumber}/${this.totalQuestions}`;
+            document.getElementById('hint-text').textContent = 'スタートを押してリズムに合わせてドラムを叩こう！';
             return;
         }
 
@@ -457,7 +562,9 @@ class Game {
     }
     
     playCurrentSound() {
-        if (this.instrument === 'bass') {
+        if (this.instrument === 'drum') {
+            this.startDrumMode();
+        } else if (this.instrument === 'bass') {
             this.startBassMode();
         } else if (this.gameMode === 'chord') {
             this.playCurrentChord();
@@ -783,6 +890,203 @@ class Game {
         setTimeout(() => this.nextQuestion(), 2000);
     }
 
+    // ========== ドラムモード関連 ==========
+
+    setupDrumQuestion() {
+        // ドラムパターンを設定
+        this.drumPattern = audioEngine.getDrumPattern(this.drumPatternName);
+        this.drumUserInputs = [];
+        this.drumBeatCount = 0;
+        this.drumExpectedBeats = [];
+
+        // 期待される入力タイミングを生成（キックとスネアのみ対象）
+        const pattern = this.drumPattern;
+        const totalBeats = pattern.beats * this.drumMeasures;
+
+        for (let beat = 0; beat < totalBeats; beat++) {
+            const patternBeat = beat % pattern.beats;
+            if (pattern.kick[patternBeat]) {
+                this.drumExpectedBeats.push({ beat, type: 'kick' });
+            }
+            if (pattern.snare[patternBeat]) {
+                this.drumExpectedBeats.push({ beat, type: 'snare' });
+            }
+        }
+    }
+
+    updateDrumUI() {
+        // 現在のパターン名を表示
+        const patternNameEl = document.getElementById('current-pattern-name');
+        if (patternNameEl && this.drumPattern) {
+            patternNameEl.textContent = this.drumPattern.name;
+        }
+
+        // BPM表示
+        const bpmEl = document.getElementById('drum-bpm-display');
+        if (bpmEl) {
+            bpmEl.textContent = `BPM: ${this.drumBpm}`;
+        }
+
+        // ビートインジケーターを更新
+        const beatIndicator = document.getElementById('drum-beat-indicator');
+        if (beatIndicator && this.drumPattern) {
+            const beatsInMeasure = this.drumPattern.beats;
+            const beatDots = beatIndicator.querySelectorAll('.drum-beat-dot');
+            const currentBeatInPattern = this.drumBeatCount % beatsInMeasure;
+
+            beatDots.forEach((dot, index) => {
+                dot.classList.toggle('active', index === currentBeatInPattern);
+            });
+        }
+
+        // 進行状況を表示
+        const progressEl = document.getElementById('drum-progress');
+        if (progressEl && this.drumPattern) {
+            const totalBeats = this.drumPattern.beats * this.drumMeasures;
+            progressEl.textContent = `${Math.min(this.drumBeatCount + 1, totalBeats)} / ${totalBeats}`;
+        }
+    }
+
+    startDrumMode() {
+        if (this.drumIsPlaying) {
+            // 既に再生中なら停止
+            this.stopDrumMode();
+            return;
+        }
+
+        this.hasPlayed = true;
+        this.drumIsPlaying = true;
+        this.drumBeatCount = 0;
+        this.drumUserInputs = [];
+
+        const playBtn = document.getElementById('play-sound-btn');
+        playBtn.classList.add('playing');
+        playBtn.querySelector('.play-text').textContent = '停止';
+
+        document.getElementById('hint-text').textContent = 'リズムに合わせてドラムを叩こう！';
+
+        // パターンに合わせてドラムを自動再生
+        const pattern = this.drumPattern;
+        const totalBeats = pattern.beats * this.drumMeasures;
+        const beatInterval = (60 / this.drumBpm) * 1000 / (pattern.beats === 16 ? 2 : 1); // 16ビートの場合は倍速
+
+        const tick = () => {
+            if (!this.drumIsPlaying) return;
+
+            const patternBeat = this.drumBeatCount % pattern.beats;
+
+            // ハイハットを自動再生（ガイド用）
+            if (pattern.hihat[patternBeat]) {
+                audioEngine.playHihat(false);
+            }
+
+            // ビートインジケーター更新
+            this.updateDrumUI();
+
+            this.drumBeatCount++;
+
+            // 全ビート終了
+            if (this.drumBeatCount >= totalBeats) {
+                this.stopDrumMode();
+                this.evaluateDrumPerformance();
+                return;
+            }
+        };
+
+        tick(); // 最初のビート
+        this.drumInterval = setInterval(tick, beatInterval);
+    }
+
+    stopDrumMode() {
+        if (this.drumInterval) {
+            clearInterval(this.drumInterval);
+            this.drumInterval = null;
+        }
+        this.drumIsPlaying = false;
+
+        const playBtn = document.getElementById('play-sound-btn');
+        playBtn.classList.remove('playing');
+        playBtn.querySelector('.play-text').textContent = '音を聴く';
+
+        // ビートインジケーターをリセット
+        document.querySelectorAll('.drum-beat-dot').forEach(dot => {
+            dot.classList.remove('active');
+        });
+    }
+
+    checkDrumAnswer(drumType) {
+        // 現在のビートでの入力を記録
+        const tolerance = 1; // ビートの許容範囲
+
+        // 入力を記録
+        this.drumUserInputs.push({
+            beat: this.drumBeatCount,
+            type: drumType,
+            timestamp: Date.now()
+        });
+
+        // 対応するビートパッドをハイライト
+        const pad = document.querySelector(`.drum-pad[data-drum="${drumType}"]`);
+        if (pad) {
+            // 期待されるビートと一致するかチェック
+            const expectedAtBeat = this.drumExpectedBeats.filter(
+                e => Math.abs(e.beat - this.drumBeatCount) <= tolerance && e.type === drumType
+            );
+
+            if (expectedAtBeat.length > 0) {
+                pad.classList.add('correct');
+                setTimeout(() => pad.classList.remove('correct'), 200);
+            } else {
+                pad.classList.add('wrong');
+                setTimeout(() => pad.classList.remove('wrong'), 200);
+            }
+        }
+    }
+
+    evaluateDrumPerformance() {
+        // 期待されるビートに対してユーザーが正しく入力したかチェック
+        const tolerance = 1;
+        let correctHits = 0;
+
+        this.drumExpectedBeats.forEach(expected => {
+            const matchingInput = this.drumUserInputs.find(
+                input => Math.abs(input.beat - expected.beat) <= tolerance && input.type === expected.type
+            );
+            if (matchingInput) {
+                correctHits++;
+            }
+        });
+
+        const totalExpected = this.drumExpectedBeats.length;
+        const percentage = totalExpected > 0 ? (correctHits / totalExpected) * 100 : 0;
+
+        // スコア計算
+        const baseScore = correctHits * 15;
+        const streakBonus = this.streak * 10;
+        const difficultyBonus = this.difficulty === 'hard' ? 50 : this.difficulty === 'medium' ? 25 : 0;
+        const roundScore = baseScore + streakBonus + difficultyBonus;
+
+        // 70%以上正解で成功
+        const isSuccess = percentage >= 70;
+
+        if (isSuccess) {
+            this.correctCount++;
+            this.streak++;
+            this.maxStreak = Math.max(this.maxStreak, this.streak);
+            this.score += roundScore;
+            this.showFeedback(true, null);
+        } else {
+            this.streak = 0;
+            this.score += Math.floor(roundScore * 0.3); // 部分点
+            this.showFeedback(false, `${correctHits}/${totalExpected}ヒット`);
+        }
+
+        document.getElementById('current-score').textContent = this.score;
+        document.getElementById('current-streak').textContent = this.streak;
+
+        setTimeout(() => this.nextQuestion(), 2000);
+    }
+
     checkAnswer(selected) {
         if (!this.hasPlayed) {
             document.getElementById('hint-text').textContent = '⚠️ まず音を聴いてください！';
@@ -970,6 +1274,11 @@ class Game {
     }
     
     showScreen(screenName) {
+        // ドラムモードの場合はパターン再生を停止
+        if (this.drumIsPlaying) {
+            this.stopDrumMode();
+        }
+
         // ベースモードの場合はメトロノームを停止
         if (this.bassIsPlaying) {
             this.stopBassMode();
