@@ -44,6 +44,8 @@ class Game {
         this.drumExpectedBeats = []; // 期待される入力タイミング
         this.drumMeasures = 2; // 小節数
         this.drumInterval = null; // ドラムパターン再生用インターバル
+        this.drumCorrectHits = 0; // リアルタイムの正解数
+        this.drumJudgmentTimeout = null; // 判定表示のタイムアウト
 
         this.init();
     }
@@ -917,6 +919,7 @@ class Game {
         this.drumUserInputs = [];
         this.drumBeatCount = 0;
         this.drumExpectedBeats = [];
+        this.drumCorrectHits = 0;
 
         // 期待される入力タイミングを生成（キックとスネアのみ対象）
         const pattern = this.drumPattern;
@@ -930,6 +933,15 @@ class Game {
             if (pattern.snare[patternBeat]) {
                 this.drumExpectedBeats.push({ beat, type: 'snare' });
             }
+        }
+
+        // リアルタイムヒットカウンターを初期化
+        this.updateDrumHitCounter();
+
+        // 判定表示をクリア
+        const judgmentEl = document.getElementById('drum-judgment');
+        if (judgmentEl) {
+            judgmentEl.innerHTML = '';
         }
     }
 
@@ -1027,9 +1039,9 @@ class Game {
         playBtn.classList.remove('playing');
         playBtn.querySelector('.play-text').textContent = '音を聴く';
 
-        // ビートインジケーターをリセット
+        // ビートインジケーターをリセット（activeと判定マーク両方）
         document.querySelectorAll('.drum-beat-dot').forEach(dot => {
-            dot.classList.remove('active');
+            dot.classList.remove('active', 'hit-correct', 'hit-wrong');
         });
     }
 
@@ -1046,18 +1058,132 @@ class Game {
 
         // 対応するビートパッドをハイライト
         const pad = document.querySelector(`.drum-pad[data-drum="${drumType}"]`);
+        const flashOverlay = document.getElementById('drum-flash-overlay');
+
         if (pad) {
             // 期待されるビートと一致するかチェック
             const expectedAtBeat = this.drumExpectedBeats.filter(
                 e => Math.abs(e.beat - this.drumBeatCount) <= tolerance && e.type === drumType
             );
 
+            // タイミングの精度を計算（判定用）
+            let timingDiff = tolerance + 1;
             if (expectedAtBeat.length > 0) {
+                timingDiff = Math.min(...expectedAtBeat.map(e => Math.abs(e.beat - this.drumBeatCount)));
+            }
+
+            if (expectedAtBeat.length > 0) {
+                // 正解時のフィードバック
+                this.drumCorrectHits++;
+
+                // パッドのアニメーション
+                pad.classList.remove('correct', 'wrong');
+                void pad.offsetWidth; // リフローを強制してアニメーションをリセット
                 pad.classList.add('correct');
-                setTimeout(() => pad.classList.remove('correct'), 200);
+                setTimeout(() => pad.classList.remove('correct'), 400);
+
+                // 画面フラッシュ効果
+                if (flashOverlay) {
+                    flashOverlay.classList.remove('flash-correct', 'flash-wrong');
+                    void flashOverlay.offsetWidth;
+                    flashOverlay.classList.add('flash-correct');
+                    setTimeout(() => flashOverlay.classList.remove('flash-correct'), 300);
+                }
+
+                // 判定テキスト表示
+                let judgmentText, judgmentClass;
+                if (timingDiff === 0) {
+                    judgmentText = 'PERFECT!';
+                    judgmentClass = 'perfect';
+                } else if (timingDiff <= 0.5) {
+                    judgmentText = 'GREAT!';
+                    judgmentClass = 'great';
+                } else {
+                    judgmentText = 'GOOD';
+                    judgmentClass = 'good';
+                }
+                this.showDrumJudgment(judgmentText, judgmentClass);
+
+                // ビートインジケーターに正解マーク
+                this.markBeatIndicator(this.drumBeatCount, true);
             } else {
+                // 不正解時のフィードバック
+                pad.classList.remove('correct', 'wrong');
+                void pad.offsetWidth;
                 pad.classList.add('wrong');
-                setTimeout(() => pad.classList.remove('wrong'), 200);
+                setTimeout(() => pad.classList.remove('wrong'), 400);
+
+                // 画面フラッシュ効果（不正解）
+                if (flashOverlay) {
+                    flashOverlay.classList.remove('flash-correct', 'flash-wrong');
+                    void flashOverlay.offsetWidth;
+                    flashOverlay.classList.add('flash-wrong');
+                    setTimeout(() => flashOverlay.classList.remove('flash-wrong'), 300);
+                }
+
+                // 判定テキスト表示
+                this.showDrumJudgment('MISS', 'miss');
+
+                // ビートインジケーターに不正解マーク
+                this.markBeatIndicator(this.drumBeatCount, false);
+            }
+
+            // ヒットカウンターを更新
+            this.updateDrumHitCounter();
+        }
+    }
+
+    // 判定テキストを表示
+    showDrumJudgment(text, className) {
+        const judgmentEl = document.getElementById('drum-judgment');
+        if (!judgmentEl) return;
+
+        // 前のタイムアウトをクリア
+        if (this.drumJudgmentTimeout) {
+            clearTimeout(this.drumJudgmentTimeout);
+        }
+
+        // 新しい判定を表示
+        judgmentEl.innerHTML = `<span class="judgment-text ${className}">${text}</span>`;
+
+        // 一定時間後にフェードアウト
+        this.drumJudgmentTimeout = setTimeout(() => {
+            judgmentEl.innerHTML = '';
+        }, 800);
+    }
+
+    // ヒットカウンターを更新
+    updateDrumHitCounter() {
+        const hitCountEl = document.getElementById('drum-hit-count');
+        const hitTotalEl = document.getElementById('drum-hit-total');
+
+        if (hitCountEl) {
+            hitCountEl.textContent = this.drumCorrectHits;
+            // パルスアニメーション
+            hitCountEl.classList.remove('pulse');
+            void hitCountEl.offsetWidth;
+            hitCountEl.classList.add('pulse');
+        }
+
+        if (hitTotalEl) {
+            hitTotalEl.textContent = this.drumExpectedBeats.length;
+        }
+    }
+
+    // ビートインジケーターにマークを付ける
+    markBeatIndicator(beat, isCorrect) {
+        const pattern = this.drumPattern;
+        if (!pattern) return;
+
+        const beatInPattern = beat % pattern.beats;
+        const beatDot = document.querySelector(`.drum-beat-dot[data-beat="${beatInPattern}"]`);
+
+        if (beatDot) {
+            beatDot.classList.remove('hit-correct', 'hit-wrong');
+            if (isCorrect) {
+                beatDot.classList.add('hit-correct');
+            } else {
+                beatDot.classList.add('hit-wrong');
             }
         }
     }

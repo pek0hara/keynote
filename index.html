@@ -363,6 +363,22 @@
                                 </div>
                             </div>
 
+                            <!-- リアルタイム判定表示 -->
+                            <div class="drum-realtime-feedback">
+                                <div class="drum-hit-counter">
+                                    <span class="hit-label">ヒット</span>
+                                    <span class="hit-count" id="drum-hit-count">0</span>
+                                    <span class="hit-separator">/</span>
+                                    <span class="hit-total" id="drum-hit-total">0</span>
+                                </div>
+                                <div class="drum-judgment" id="drum-judgment">
+                                    <!-- 判定テキストがここに表示される -->
+                                </div>
+                            </div>
+
+                            <!-- 画面フラッシュ効果用オーバーレイ -->
+                            <div class="drum-flash-overlay" id="drum-flash-overlay"></div>
+
                             <!-- ドラムパッド -->
                             <div class="drum-pads" id="drum-pads">
                                 <div class="drum-pad-row">
