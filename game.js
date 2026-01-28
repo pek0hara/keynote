@@ -632,26 +632,21 @@ class Game {
         const playBtn = document.getElementById('play-sound-btn');
         playBtn.classList.add('playing');
 
-        // 各コードを4回ずつ繰り返し再生
-        const repeatCount = 4;
-        const beatInterval = 500; // 1拍の間隔（ms）
-        const chordDuration = repeatCount * beatInterval; // 1コードあたりの時間
+        // 各コードを1回ずつ再生
+        const chordInterval = 500; // コード間の間隔（ms）
 
         this.currentChordsSequence.forEach((chord, chordIndex) => {
-            for (let beat = 0; beat < repeatCount; beat++) {
-                const time = chordIndex * chordDuration + beat * beatInterval;
-                setTimeout(() => {
-                    audioEngine.playChord(chord, this.instrument);
-                    // 最初のコードの最初の拍のみビジュアル表示
-                    if (chordIndex === 0 && beat === 0) {
-                        this.animateChord(chord);
-                    }
-                }, time);
-            }
+            setTimeout(() => {
+                audioEngine.playChord(chord, this.instrument);
+                // 最初のコードのみビジュアル表示
+                if (chordIndex === 0) {
+                    this.animateChord(chord);
+                }
+            }, chordIndex * chordInterval);
         });
 
         // 再生ボタンのアニメーションを終了
-        const totalDuration = this.currentChordsSequence.length * chordDuration + 500;
+        const totalDuration = this.currentChordsSequence.length * chordInterval + 500;
         setTimeout(() => playBtn.classList.remove('playing'), totalDuration);
 
         // ヒントテキストを更新
