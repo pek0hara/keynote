@@ -1652,17 +1652,6 @@ body {
     font-weight: 600;
 }
 
-/* 正解・不正解のフィードバック */
-.drum-pad.correct {
-    background: var(--success-gradient) !important;
-    box-shadow: 0 0 30px rgba(56, 239, 125, 0.8);
-}
-
-.drum-pad.wrong {
-    background: var(--error-gradient) !important;
-    box-shadow: 0 0 30px rgba(244, 92, 67, 0.8);
-}
-
 /* ドラムモードのモバイル対応 */
 @media (max-width: 640px) {
     .drum-pad {
@@ -1690,5 +1679,210 @@ body {
     .drum-beat-dot {
         width: 12px;
         height: 12px;
+    }
+}
+
+/* ドラムモード - リアルタイム判定フィードバック */
+.drum-realtime-feedback {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 2rem;
+    margin: 1rem 0;
+    padding: 0.8rem 1.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+}
+
+.drum-hit-counter {
+    display: flex;
+    align-items: baseline;
+    gap: 0.3rem;
+    font-size: 1.2rem;
+}
+
+.hit-label {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-right: 0.5rem;
+}
+
+.hit-count {
+    font-weight: 700;
+    font-size: 1.5rem;
+    color: var(--success);
+    transition: transform 0.2s, color 0.2s;
+}
+
+.hit-count.pulse {
+    animation: hitPulse 0.3s ease-out;
+}
+
+.hit-separator {
+    color: var(--text-secondary);
+}
+
+.hit-total {
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+}
+
+@keyframes hitPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.5); }
+    100% { transform: scale(1); }
+}
+
+/* 判定テキスト表示 */
+.drum-judgment {
+    min-width: 120px;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.judgment-text {
+    font-size: 1.4rem;
+    font-weight: 700;
+    padding: 0.3rem 1rem;
+    border-radius: 8px;
+    animation: judgmentAppear 0.4s ease-out forwards;
+    opacity: 0;
+    transform: scale(0.5);
+}
+
+.judgment-text.perfect {
+    color: #fff;
+    background: linear-gradient(135deg, #ffd700, #ff8c00);
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+}
+
+.judgment-text.great {
+    color: #fff;
+    background: linear-gradient(135deg, #38ef7d, #11998e);
+    text-shadow: 0 0 10px rgba(56, 239, 125, 0.8);
+    box-shadow: 0 0 20px rgba(56, 239, 125, 0.5);
+}
+
+.judgment-text.good {
+    color: #fff;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    text-shadow: 0 0 10px rgba(102, 126, 234, 0.8);
+    box-shadow: 0 0 15px rgba(102, 126, 234, 0.5);
+}
+
+.judgment-text.miss {
+    color: #fff;
+    background: linear-gradient(135deg, #f45c43, #eb3349);
+    text-shadow: 0 0 10px rgba(244, 92, 67, 0.8);
+    box-shadow: 0 0 15px rgba(244, 92, 67, 0.5);
+}
+
+@keyframes judgmentAppear {
+    0% {
+        opacity: 0;
+        transform: scale(0.5) translateY(10px);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.2) translateY(-5px);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* 画面フラッシュオーバーレイ */
+.drum-flash-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.1s;
+}
+
+.drum-flash-overlay.flash-correct {
+    background: radial-gradient(circle at center, rgba(56, 239, 125, 0.4), transparent 70%);
+    animation: flashCorrect 0.3s ease-out;
+}
+
+.drum-flash-overlay.flash-wrong {
+    background: radial-gradient(circle at center, rgba(244, 92, 67, 0.4), transparent 70%);
+    animation: flashWrong 0.3s ease-out;
+}
+
+@keyframes flashCorrect {
+    0% { opacity: 0.8; }
+    100% { opacity: 0; }
+}
+
+@keyframes flashWrong {
+    0% { opacity: 0.6; }
+    100% { opacity: 0; }
+}
+
+/* ドラムパッドの改善されたフィードバック */
+.drum-pad.correct {
+    background: var(--success-gradient) !important;
+    box-shadow: 0 0 40px rgba(56, 239, 125, 0.9), inset 0 0 20px rgba(255, 255, 255, 0.3);
+    animation: padCorrect 0.4s ease-out;
+    transform: scale(1.05);
+}
+
+.drum-pad.wrong {
+    background: var(--error-gradient) !important;
+    box-shadow: 0 0 40px rgba(244, 92, 67, 0.9), inset 0 0 20px rgba(0, 0, 0, 0.3);
+    animation: padWrong 0.4s ease-out;
+}
+
+@keyframes padCorrect {
+    0% { transform: scale(1); }
+    30% { transform: scale(1.15); }
+    100% { transform: scale(1.05); }
+}
+
+@keyframes padWrong {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-5px); }
+    40%, 80% { transform: translateX(5px); }
+}
+
+/* ビートインジケーターの判定表示 */
+.drum-beat-dot.hit-correct {
+    background: var(--success) !important;
+    box-shadow: 0 0 15px rgba(56, 239, 125, 0.8);
+}
+
+.drum-beat-dot.hit-wrong {
+    background: var(--error) !important;
+    box-shadow: 0 0 15px rgba(244, 92, 67, 0.8);
+}
+
+/* モバイル対応 */
+@media (max-width: 640px) {
+    .drum-realtime-feedback {
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+    }
+
+    .drum-hit-counter {
+        font-size: 1rem;
+    }
+
+    .hit-count {
+        font-size: 1.3rem;
+    }
+
+    .judgment-text {
+        font-size: 1.2rem;
     }
 }
