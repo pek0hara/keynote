@@ -124,8 +124,18 @@ class Game {
 
     initDrumPads() {
         // ドラムパッドの各パッドにイベントを追加
+        // touchstart/mousedownを使用してタップした瞬間に音が鳴るようにする
         document.querySelectorAll('.drum-pad').forEach(pad => {
-            pad.addEventListener('click', () => this.playDrumPad(pad));
+            // タッチデバイス用: touchstartで即座に反応（複数同時タップ対応）
+            pad.addEventListener('touchstart', (e) => {
+                e.preventDefault(); // ゴーストクリックを防止
+                this.playDrumPad(pad);
+            }, { passive: false });
+
+            // デスクトップ用: mousedownで即座に反応
+            pad.addEventListener('mousedown', (e) => {
+                this.playDrumPad(pad);
+            });
         });
     }
 
