@@ -295,7 +295,12 @@ class Game {
         } else if (this.gameMode === 'chord') {
             this.availableChords = audioEngine.getChordsByDifficulty(this.difficulty);
         } else {
-            this.availableNotes = audioEngine.getNotesByDifficulty(this.difficulty);
+            // ギターの場合は指板に存在する音のみを使用
+            if (this.instrument === 'guitar') {
+                this.availableNotes = audioEngine.getGuitarNotesByDifficulty(this.difficulty);
+            } else {
+                this.availableNotes = audioEngine.getNotesByDifficulty(this.difficulty);
+            }
         }
 
         this.updateInstrumentVisual();
