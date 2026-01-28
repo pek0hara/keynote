@@ -174,13 +174,35 @@ class AudioEngine {
                 await this.audioContext.resume();
             }
             this.isInitialized = true;
+
+            // ページがバックグラウンドから復帰した時に AudioContext を再開
+            this.setupVisibilityChangeHandler();
         } catch (error) {
             console.error('Failed to initialize AudioEngine:', error);
+        }
+    }
+
+    // ページ表示状態の変更を監視して AudioContext を再開
+    setupVisibilityChangeHandler() {
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible' && this.audioContext) {
+                this.ensureAudioContextRunning();
+            }
+        });
+    }
+
+    // AudioContext が running 状態であることを保証する
+    ensureAudioContextRunning() {
+        if (this.audioContext && this.audioContext.state === 'suspended') {
+            this.audioContext.resume().catch(err => {
+                console.warn('Failed to resume AudioContext:', err);
+            });
         }
     }
     
     playPiano(frequency, duration = 1.5) {
         if (!this.isInitialized) return;
+        this.ensureAudioContextRunning();
         const now = this.audioContext.currentTime;
         
         const osc1 = this.audioContext.createOscillator();
@@ -213,6 +235,7 @@ class AudioEngine {
     
     playGuitar(frequency, duration = 2) {
         if (!this.isInitialized) return;
+        this.ensureAudioContextRunning();
         const now = this.audioContext.currentTime;
 
         const osc = this.audioContext.createOscillator();
@@ -237,6 +260,7 @@ class AudioEngine {
     // ベース音を再生（低音に最適化）
     playBass(frequency, duration = 1.5) {
         if (!this.isInitialized) return;
+        this.ensureAudioContextRunning();
         const now = this.audioContext.currentTime;
 
         // サイン波とトライアングル波を組み合わせて太い低音を生成
@@ -278,6 +302,7 @@ class AudioEngine {
     // メトロノームのクリック音
     playMetronomeClick(isAccent = false) {
         if (!this.isInitialized) return;
+        this.ensureAudioContextRunning();
         const now = this.audioContext.currentTime;
 
         const osc = this.audioContext.createOscillator();
@@ -328,6 +353,7 @@ class AudioEngine {
     // ドラム音声生成 - キック（バスドラム）
     playKick() {
         if (!this.isInitialized) return;
+        this.ensureAudioContextRunning();
         const now = this.audioContext.currentTime;
 
         // オシレーターでキックのトーンを生成
@@ -348,6 +374,7 @@ class AudioEngine {
     // ドラム音声生成 - スネア
     playSnare() {
         if (!this.isInitialized) return;
+        this.ensureAudioContextRunning();
         const now = this.audioContext.currentTime;
 
         // ノイズでスネアを生成
@@ -392,6 +419,7 @@ class AudioEngine {
     // ドラム音声生成 - ハイハット（クローズ）
     playHihat(open = false) {
         if (!this.isInitialized) return;
+        this.ensureAudioContextRunning();
         const now = this.audioContext.currentTime;
 
         const duration = open ? 0.3 : 0.08;
@@ -501,6 +529,7 @@ class AudioEngine {
     // コード用のピアノ音（音量調整版）
     playPianoChordNote(frequency, duration = 2) {
         if (!this.isInitialized) return;
+        this.ensureAudioContextRunning();
         const now = this.audioContext.currentTime;
         
         const osc1 = this.audioContext.createOscillator();
@@ -534,6 +563,7 @@ class AudioEngine {
     // コード用のギター音（音量調整版）
     playGuitarChordNote(frequency, duration = 2.5) {
         if (!this.isInitialized) return;
+        this.ensureAudioContextRunning();
         const now = this.audioContext.currentTime;
         
         const osc = this.audioContext.createOscillator();
