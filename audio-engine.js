@@ -91,11 +91,16 @@ class AudioEngine {
         this.chordDefinitions = {
             // メジャーコード
             'C': ['C4', 'E4', 'G4'],
+            'C#': ['C#4', 'F4', 'G#4'],
             'D': ['D4', 'F#4', 'A4'],
+            'D#': ['D#4', 'G4', 'A#4'],
             'E': ['E4', 'G#4', 'B4'],
             'F': ['F4', 'A4', 'C5'],
+            'F#': ['F#4', 'A#4', 'C#5'],
             'G': ['G3', 'B3', 'D4'],
+            'G#': ['G#3', 'C4', 'D#4'],
             'A': ['A3', 'C#4', 'E4'],
+            'A#': ['A#3', 'D4', 'F4'],
             'B': ['B3', 'D#4', 'F#4'],
             // マイナーコード
             'Cm': ['C4', 'D#4', 'G4'],
@@ -117,8 +122,9 @@ class AudioEngine {
         
         // コード名の日本語表記
         this.chordNamesJP = {
-            'C': 'Cメジャー', 'D': 'Dメジャー', 'E': 'Eメジャー',
-            'F': 'Fメジャー', 'G': 'Gメジャー', 'A': 'Aメジャー', 'B': 'Bメジャー',
+            'C': 'Cメジャー', 'C#': 'C♯メジャー', 'D': 'Dメジャー', 'D#': 'D♯メジャー',
+            'E': 'Eメジャー', 'F': 'Fメジャー', 'F#': 'F♯メジャー', 'G': 'Gメジャー',
+            'G#': 'G♯メジャー', 'A': 'Aメジャー', 'A#': 'A♯メジャー', 'B': 'Bメジャー',
             'Cm': 'Cマイナー', 'Dm': 'Dマイナー', 'Em': 'Eマイナー',
             'Fm': 'Fマイナー', 'Gm': 'Gマイナー', 'Am': 'Aマイナー', 'Bm': 'Bマイナー',
             'C7': 'Cセブン', 'D7': 'Dセブン', 'E7': 'Eセブン',
@@ -130,11 +136,16 @@ class AudioEngine {
         this.guitarChordForms = {
             // メジャーコード
             'C':  [{string: 1, fret: 0}, {string: 2, fret: 1}, {string: 3, fret: 0}, {string: 4, fret: 2}, {string: 5, fret: 3}],
+            'C#': [{string: 1, fret: 1}, {string: 3, fret: 1}, {string: 5, fret: 4}],
             'D':  [{string: 1, fret: 2}, {string: 2, fret: 3}, {string: 3, fret: 2}, {string: 4, fret: 0}],
+            'D#': [{string: 1, fret: 3}, {string: 3, fret: 3}, {string: 4, fret: 1}],
             'E':  [{string: 1, fret: 0}, {string: 2, fret: 0}, {string: 3, fret: 1}, {string: 4, fret: 2}, {string: 5, fret: 2}, {string: 6, fret: 0}],
             'F':  [{string: 1, fret: 1}, {string: 2, fret: 1}, {string: 3, fret: 2}, {string: 4, fret: 3}, {string: 5, fret: 3}, {string: 6, fret: 1}],
+            'F#': [{string: 1, fret: 2}, {string: 2, fret: 2}, {string: 3, fret: 3}, {string: 4, fret: 4}, {string: 6, fret: 2}],
             'G':  [{string: 1, fret: 3}, {string: 2, fret: 0}, {string: 3, fret: 0}, {string: 4, fret: 0}, {string: 5, fret: 2}, {string: 6, fret: 3}],
+            'G#': [{string: 1, fret: 4}, {string: 2, fret: 1}, {string: 4, fret: 1}, {string: 6, fret: 4}],
             'A':  [{string: 1, fret: 0}, {string: 2, fret: 2}, {string: 3, fret: 2}, {string: 4, fret: 2}, {string: 5, fret: 0}],
+            'A#': [{string: 1, fret: 1}, {string: 2, fret: 3}, {string: 4, fret: 3}, {string: 5, fret: 1}],
             'B':  [{string: 1, fret: 2}, {string: 2, fret: 4}, {string: 3, fret: 4}, {string: 4, fret: 4}, {string: 5, fret: 2}],
             // マイナーコード
             'Cm': [{string: 1, fret: 3}, {string: 2, fret: 4}, {string: 3, fret: 5}, {string: 4, fret: 5}, {string: 5, fret: 3}],
