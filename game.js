@@ -223,6 +223,10 @@ class Game {
                 return chord;
             }
         }
+        // availableChordsになくても、chordDefinitionsに定義があればメジャーコードを返す
+        if (audioEngine.chordDefinitions[noteName]) {
+            return noteName;
+        }
         return null;
     }
     

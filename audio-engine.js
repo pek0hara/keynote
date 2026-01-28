@@ -630,8 +630,8 @@ class AudioEngine {
                 // メジャー + マイナー
                 return ['C', 'D', 'E', 'F', 'G', 'A', 'B', 'Am', 'Dm', 'Em', 'Bm'];
             case 'hard':
-                // メジャー + マイナー + セブンス
-                return ['C', 'D', 'E', 'F', 'G', 'A', 'B', 'Am', 'Dm', 'Em', 'Bm', 'C7', 'G7', 'D7', 'A7', 'B7'];
+                // メジャー + マイナー + セブンス + シャープコード
+                return ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B', 'Am', 'Dm', 'Em', 'Bm', 'C7', 'G7', 'D7', 'A7', 'B7'];
             default:
                 return this.getChordsByDifficulty('easy');
         }
