@@ -117,8 +117,8 @@ class Game {
         position.classList.add('playing');
         setTimeout(() => position.classList.remove('playing'), 300);
 
-        // ベースモードでゲーム中の場合、回答をチェック
-        if (this.gameMode === 'bass' && this.bassIsPlaying) {
+        // ベース楽器でゲーム中の場合、回答をチェック
+        if (this.instrument === 'bass' && this.bassIsPlaying) {
             this.checkBassAnswer(note);
         }
     }
@@ -181,6 +181,9 @@ class Game {
         document.querySelectorAll('.instrument-btn').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.instrument === instrument);
         });
+
+        // ベース選択時は難易度説明を更新
+        this.updateDifficultyDescriptions();
     }
     
     selectMode(mode) {
@@ -198,14 +201,14 @@ class Game {
         const mediumDesc = document.getElementById('difficulty-medium-desc');
         const hardDesc = document.getElementById('difficulty-hard-desc');
 
-        if (this.gameMode === 'chord') {
-            easyDesc.textContent = 'メジャーコード';
-            mediumDesc.textContent = '+マイナー';
-            hardDesc.textContent = '+セブンス';
-        } else if (this.gameMode === 'bass') {
+        if (this.instrument === 'bass') {
             easyDesc.textContent = '4コード・BPM80';
             mediumDesc.textContent = '6コード・BPM100';
             hardDesc.textContent = '8コード・BPM120';
+        } else if (this.gameMode === 'chord') {
+            easyDesc.textContent = 'メジャーコード';
+            mediumDesc.textContent = '+マイナー';
+            hardDesc.textContent = '+セブンス';
         } else {
             easyDesc.textContent = 'C D E F G A B';
             mediumDesc.textContent = '2オクターブ';
@@ -234,11 +237,12 @@ class Game {
         this.bassIsPlaying = false;
         this.bassUserInputs = [];
 
-        if (this.gameMode === 'chord') {
-            this.availableChords = audioEngine.getChordsByDifficulty(this.difficulty);
-        } else if (this.gameMode === 'bass') {
+        if (this.instrument === 'bass') {
+            // ベース楽器選択時
             this.availableChords = audioEngine.getChordsByDifficulty(this.difficulty);
             this.setupBassMode();
+        } else if (this.gameMode === 'chord') {
+            this.availableChords = audioEngine.getChordsByDifficulty(this.difficulty);
         } else {
             this.availableNotes = audioEngine.getNotesByDifficulty(this.difficulty);
         }
@@ -273,8 +277,8 @@ class Game {
 
     
     updateInstrumentVisual() {
-        // ベースモードの場合
-        if (this.gameMode === 'bass') {
+        // ベース楽器の場合
+        if (this.instrument === 'bass') {
             this.pianoKeyboard.classList.add('hidden');
             this.guitarFretboard.classList.add('hidden');
             this.bassModeUI.classList.remove('hidden');
@@ -313,8 +317,8 @@ class Game {
         const answerSection = document.querySelector('.answer-section');
         grid.innerHTML = '';
 
-        // ベースモードでは回答ボタンを非表示
-        if (this.gameMode === 'bass') {
+        // ベース楽器では回答ボタンを非表示
+        if (this.instrument === 'bass') {
             answerSection.classList.add('hidden');
             return;
         }
@@ -355,8 +359,8 @@ class Game {
         document.getElementById('feedback-display').classList.add('hidden');
 
         if (this.questionNumber > this.totalQuestions) {
-            // ベースモードの場合はメトロノームを停止
-            if (this.gameMode === 'bass') {
+            // ベース楽器の場合はメトロノームを停止
+            if (this.instrument === 'bass') {
                 audioEngine.stopMetronome();
                 this.bassIsPlaying = false;
             }
@@ -364,8 +368,8 @@ class Game {
             return;
         }
 
-        // ベースモードの場合
-        if (this.gameMode === 'bass') {
+        // ベース楽器の場合
+        if (this.instrument === 'bass') {
             this.setupBassQuestion();
             this.updateBassUI();
             document.getElementById('current-score').textContent = this.score;
@@ -453,7 +457,7 @@ class Game {
     }
     
     playCurrentSound() {
-        if (this.gameMode === 'bass') {
+        if (this.instrument === 'bass') {
             this.startBassMode();
         } else if (this.gameMode === 'chord') {
             this.playCurrentChord();
@@ -924,16 +928,19 @@ class Game {
         const feedback = document.getElementById('feedback-display');
         const icon = document.getElementById('feedback-icon');
         const text = document.getElementById('feedback-text');
-        
+
         icon.className = 'feedback-icon ' + (isCorrect ? 'correct' : 'wrong');
         icon.textContent = isCorrect ? '✓' : '✗';
-        
-        if (this.gameMode === 'chord') {
+
+        if (this.instrument === 'bass') {
+            // ベース楽器の場合
+            text.textContent = isCorrect ? '正解！' : correctAnswer;
+        } else if (this.gameMode === 'chord') {
             text.textContent = isCorrect ? '正解！' : `正解は ${correctAnswer}`;
         } else {
             text.textContent = isCorrect ? '正解！' : `正解は ${audioEngine.getNoteNameJP(correctAnswer)}`;
         }
-        
+
         feedback.classList.remove('hidden');
     }
     
