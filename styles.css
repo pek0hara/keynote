@@ -156,7 +156,7 @@ body {
 .main-content {
     flex: 1;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
     padding: var(--spacing-lg);
     position: relative;
@@ -168,6 +168,7 @@ body {
     display: none;
     width: 100%;
     max-width: 600px;
+    margin: auto 0;
     animation: fadeIn 0.5s ease;
 }
 
