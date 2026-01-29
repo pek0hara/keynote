@@ -57,6 +57,11 @@
     box-sizing: border-box;
 }
 
+/* ユーティリティ */
+.hidden {
+    display: none !important;
+}
+
 html {
     font-size: 16px;
     touch-action: manipulation;
@@ -230,6 +235,59 @@ body {
     margin-bottom: var(--spacing-md);
     text-transform: uppercase;
     letter-spacing: 0.1em;
+}
+
+/* カスタム設定（BPM等） */
+.custom-settings {
+    margin-top: var(--spacing-lg);
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-lg);
+}
+
+.bpm-control-group {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.bpm-slider {
+    flex: 1;
+    height: 8px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    outline: none;
+    cursor: pointer;
+    -webkit-appearance: none;
+}
+
+.bpm-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--primary-gradient);
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    transition: transform 0.1s;
+}
+
+.bpm-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
+
+.bpm-input {
+    width: 80px;
+    padding: var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(0, 0, 0, 0.3);
+    color: white;
+    font-size: 1.2rem;
+    font-weight: 700;
+    text-align: center;
+    font-family: 'Outfit', sans-serif;
 }
 
 /* 楽器選択ボタン */

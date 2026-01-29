@@ -58,6 +58,7 @@ class Game {
         this.maracasDurationBeats = 32; // セッションの長さ
         this.maracasStats = { count: 0, sumAbsDiff: 0 };
         this.maracasModeUI = document.getElementById('maracas-mode-ui');
+        this.customBpm = 100;
 
         this.init();
     }
@@ -89,6 +90,34 @@ class Game {
             btn.addEventListener('click', () => this.selectMode(btn.dataset.mode));
         });
         
+        // BPM設定の同期
+        const bpmSlider = document.getElementById('bpm-slider');
+        const bpmInput = document.getElementById('bpm-input');
+
+        if (bpmSlider && bpmInput) {
+            bpmSlider.addEventListener('input', (e) => {
+                const val = parseInt(e.target.value);
+                bpmInput.value = val;
+                this.customBpm = val;
+                // ゲーム中にBPM変更を即時反映したい場合はここに処理を追加
+                if (this.maracasIsPlaying && this.gameMode === 'unlimited') {
+                    this.updateMaracasBpm(val);
+                }
+            });
+
+            bpmInput.addEventListener('change', (e) => {
+                let val = parseInt(e.target.value);
+                if (val < 40) val = 40;
+                if (val > 240) val = 240;
+                e.target.value = val;
+                bpmSlider.value = val;
+                this.customBpm = val;
+                if (this.maracasIsPlaying && this.gameMode === 'unlimited') {
+                    this.updateMaracasBpm(val);
+                }
+            });
+        }
+
         document.querySelectorAll('.difficulty-btn').forEach(btn => {
             btn.addEventListener('click', () => this.selectDifficulty(btn.dataset.difficulty));
         });
@@ -277,7 +306,42 @@ class Game {
             btn.classList.toggle('active', btn.dataset.instrument === instrument);
         });
 
-        // ベース選択時は難易度説明を更新
+        // モードボタンの表示切り替え
+        const singleBtn = document.getElementById('btn-single');
+        const chordBtn = document.getElementById('btn-chord');
+        const challengeBtn = document.getElementById('btn-challenge');
+        const unlimitedBtn = document.getElementById('btn-unlimited');
+
+        if (instrument === 'maracas') {
+            // マラカスの場合：チャレンジ/エンドレスを表示、単音/コードを非表示
+            if(singleBtn) singleBtn.classList.add('hidden');
+            if(chordBtn) chordBtn.classList.add('hidden');
+            if(challengeBtn) challengeBtn.classList.remove('hidden');
+            if(unlimitedBtn) unlimitedBtn.classList.remove('hidden');
+
+            // デフォルトモードを設定（現在のモードが無効な場合）
+            if (this.gameMode === 'single' || this.gameMode === 'chord') {
+                this.selectMode('challenge');
+            } else {
+                // 既存の選択を維持しつつUI更新
+                this.selectMode(this.gameMode);
+            }
+        } else {
+            // その他の楽器：単音/コードを表示、チャレンジ/エンドレスを非表示
+            if(singleBtn) singleBtn.classList.remove('hidden');
+            if(chordBtn) chordBtn.classList.remove('hidden');
+            if(challengeBtn) challengeBtn.classList.add('hidden');
+            if(unlimitedBtn) unlimitedBtn.classList.add('hidden');
+
+            // ドラムやベースもモード選択は本来無効だが、とりあえずデフォルトに戻す
+            if (this.gameMode === 'challenge' || this.gameMode === 'unlimited') {
+                this.selectMode('single');
+            } else {
+                 this.selectMode(this.gameMode);
+            }
+        }
+
+        // 難易度説明を更新
         this.updateDifficultyDescriptions();
     }
     
@@ -286,6 +350,18 @@ class Game {
         document.querySelectorAll('.mode-btn').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.mode === mode);
         });
+
+        // エンドレスモードの場合、難易度選択を隠してBPM設定を表示
+        const bpmSettings = document.getElementById('bpm-settings');
+        const difficultySelector = document.querySelector('.difficulty-selector').parentElement; // 親のselection-groupを取得
+
+        if (mode === 'unlimited') {
+            if(bpmSettings) bpmSettings.classList.remove('hidden');
+            if(difficultySelector) difficultySelector.classList.add('hidden');
+        } else {
+            if(bpmSettings) bpmSettings.classList.add('hidden');
+            if(difficultySelector) difficultySelector.classList.remove('hidden');
+        }
         
         // 難易度説明をモードに応じて更新
         this.updateDifficultyDescriptions();
@@ -301,9 +377,16 @@ class Game {
             mediumDesc.textContent = 'ロック・BPM100・フルパターン';
             hardDesc.textContent = 'ファンク・BPM120・フルパターン';
         } else if (this.instrument === 'maracas') {
-            easyDesc.textContent = 'BPM 80・16拍';
-            mediumDesc.textContent = 'BPM 100・32拍';
-            hardDesc.textContent = 'BPM 120・48拍';
+            if (this.gameMode === 'unlimited') {
+                // エンドレスモードの場合は難易度選択は隠れるが、念のため
+                easyDesc.textContent = '-';
+                mediumDesc.textContent = '-';
+                hardDesc.textContent = '-';
+            } else {
+                easyDesc.textContent = 'BPM 80・16拍';
+                mediumDesc.textContent = 'BPM 100・32拍';
+                hardDesc.textContent = 'BPM 120・48拍';
+            }
         } else if (this.instrument === 'bass') {
             easyDesc.textContent = '4コード・BPM80';
             mediumDesc.textContent = '6コード・BPM100';
@@ -418,19 +501,45 @@ class Game {
     }
 
     setupMaracasMode() {
-        switch (this.difficulty) {
-            case 'easy':
-                this.maracasBpm = 80;
-                this.maracasDurationBeats = 16;
-                break;
-            case 'medium':
-                this.maracasBpm = 100;
-                this.maracasDurationBeats = 32;
-                break;
-            case 'hard':
-                this.maracasBpm = 120;
-                this.maracasDurationBeats = 48;
-                break;
+        if (this.gameMode === 'unlimited') {
+            this.maracasBpm = this.customBpm;
+            this.maracasDurationBeats = Infinity;
+        } else {
+            switch (this.difficulty) {
+                case 'easy':
+                    this.maracasBpm = 80;
+                    this.maracasDurationBeats = 16;
+                    break;
+                case 'medium':
+                    this.maracasBpm = 100;
+                    this.maracasDurationBeats = 32;
+                    break;
+                case 'hard':
+                    this.maracasBpm = 120;
+                    this.maracasDurationBeats = 48;
+                    break;
+            }
+        }
+    }
+
+    updateMaracasBpm(newBpm) {
+        this.maracasBpm = newBpm;
+
+        // UI更新
+        document.getElementById('maracas-target-bpm').textContent = this.maracasBpm;
+        const headerBpmEl = document.getElementById('header-bpm-display');
+        if (headerBpmEl) headerBpmEl.textContent = this.maracasBpm;
+
+        if (this.metronomeRod) {
+            const intervalSec = 60 / this.maracasBpm;
+            this.metronomeRod.style.transitionDuration = `${intervalSec}s`;
+        }
+
+        // 再生中ならメトロノームを再起動（ビートカウントはリセットされるが許容）
+        if (this.maracasIsPlaying) {
+            audioEngine.startMetronome(this.maracasBpm, (beatCount, isAccent) => {
+                this.onMaracasBeat(beatCount);
+            }, 1);
         }
     }
     
@@ -566,10 +675,17 @@ class Game {
         // マラカス楽器の場合
         if (this.instrument === 'maracas') {
             this.setupMaracasQuestion();
-            document.getElementById('current-score').textContent = this.score;
-            document.getElementById('current-streak').textContent = this.streak;
-            document.getElementById('question-number').textContent = `${this.questionNumber}/${this.totalQuestions}`;
-            document.getElementById('hint-text').textContent = 'スタートを押してBPMに合わせて振ろう！';
+            if (this.gameMode === 'unlimited') {
+                document.getElementById('current-score').textContent = '-';
+                document.getElementById('current-streak').textContent = '-';
+                document.getElementById('question-number').textContent = '∞';
+                document.getElementById('hint-text').textContent = 'スタートを押してエンドレスプレイ！';
+            } else {
+                document.getElementById('current-score').textContent = this.score;
+                document.getElementById('current-streak').textContent = this.streak;
+                document.getElementById('question-number').textContent = `${this.questionNumber}/${this.totalQuestions}`;
+                document.getElementById('hint-text').textContent = 'スタートを押してBPMに合わせて振ろう！';
+            }
             return;
         }
 
