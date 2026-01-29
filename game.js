@@ -34,6 +34,7 @@ class Game {
         this.isBassGuideActive = false; // ガイド表示フラグ
         this.bassUserInputs = []; // ユーザーの入力履歴
         this.bassExpectedRoots = []; // 期待されるルート音
+        this.pressedChordTimeout = null; // 押した音のコードハイライト用タイマー
 
         // ドラムモード用
         this.drumPattern = null; // 現在のドラムパターン
@@ -261,6 +262,10 @@ class Game {
 
         // ベース楽器でゲーム中の場合、回答をチェック
         if (this.instrument === 'bass' && this.bassIsPlaying) {
+            // スケールガイド表示時は、押した音のコード構成音をハイライト
+            if (this.isBassGuideActive) {
+                this.highlightPressedNoteChord(note);
+            }
             this.checkBassAnswer(note);
         }
     }
@@ -1101,6 +1106,77 @@ class Game {
                 pos.classList.add('scale-guide');
             }
         });
+    }
+
+    // 押した音のコード構成音をハイライト
+    highlightPressedNoteChord(note) {
+        // 音名を取得（オクターブ除去）
+        const noteName = note.replace(/[0-9]/g, '');
+
+        // 現在のスケールコンテキスト（Cメジャー固定）
+        const scaleRoot = 'C';
+        const scaleType = 'major';
+        const scaleNotes = audioEngine.getScaleNotes(scaleRoot, scaleType);
+
+        let chordToneNames = [];
+
+        // スケールに含まれているかチェック
+        const scaleIndex = scaleNotes.indexOf(noteName);
+
+        if (scaleIndex !== -1) {
+            // スケール内の音：ダイアトニックコード（1度、3度、5度）を計算
+            // インデックスは 0-6
+            const rootIndex = scaleIndex;
+            const thirdIndex = (scaleIndex + 2) % 7;
+            const fifthIndex = (scaleIndex + 4) % 7;
+
+            chordToneNames = [
+                scaleNotes[rootIndex],
+                scaleNotes[thirdIndex],
+                scaleNotes[fifthIndex]
+            ];
+        } else {
+            // スケール外の音：その音をルートとするメジャーコードを表示
+            // スケール外の音のメジャースケールを取得して、1, 3, 5度を抽出
+            const targetScaleNotes = audioEngine.getScaleNotes(noteName, 'major');
+            if (targetScaleNotes.length > 0) {
+                chordToneNames = [
+                    targetScaleNotes[0],
+                    targetScaleNotes[2],
+                    targetScaleNotes[4]
+                ];
+            }
+        }
+
+        // 既存のハイライトをクリア
+        document.querySelectorAll('.bass-fret-position').forEach(pos => {
+            pos.classList.remove('pressed-chord-guide');
+        });
+
+        // タイマーをクリア
+        if (this.pressedChordTimeout) {
+            clearTimeout(this.pressedChordTimeout);
+            this.pressedChordTimeout = null;
+        }
+
+        // 新しいハイライトを適用
+        document.querySelectorAll('.bass-fret-position').forEach(pos => {
+            const posNote = pos.dataset.note;
+            if (!posNote) return;
+            const posNoteName = posNote.replace(/[0-9]/g, '');
+
+            if (chordToneNames.includes(posNoteName)) {
+                pos.classList.add('pressed-chord-guide');
+            }
+        });
+
+        // 一定時間後に消去
+        this.pressedChordTimeout = setTimeout(() => {
+            document.querySelectorAll('.bass-fret-position').forEach(pos => {
+                pos.classList.remove('pressed-chord-guide');
+            });
+            this.pressedChordTimeout = null;
+        }, 500);
     }
 
     checkBassAnswer(note) {

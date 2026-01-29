@@ -1635,6 +1635,18 @@ input:checked + .toggle-slider:before {
     font-weight: 700 !important;
 }
 
+.bass-fret-position.pressed-chord-guide {
+    background: rgba(156, 39, 176, 0.4) !important;
+    box-shadow: inset 0 0 0 2px rgba(156, 39, 176, 0.8) !important;
+}
+
+.bass-fret-position.pressed-chord-guide span {
+    opacity: 1 !important;
+    color: #fff !important;
+    text-shadow: 0 0 5px rgba(0,0,0,0.8);
+    font-weight: 700 !important;
+}
+
 @keyframes bass-string-vibrate {
     0%, 100% { transform: translateY(-50%); }
     25% { transform: translateY(calc(-50% - 4px)); }
