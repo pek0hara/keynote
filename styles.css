@@ -1045,11 +1045,43 @@ body {
 /* ギターフレットボード */
 .guitar-fretboard {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-md);
 }
 
 .guitar-fretboard.hidden {
     display: none;
+}
+
+.guitar-controls {
+    display: flex;
+    gap: var(--spacing-md);
+}
+
+.modifier-btn {
+    padding: var(--spacing-sm) var(--spacing-lg);
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--radius-full);
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    min-width: 80px;
+}
+
+.modifier-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: var(--text-primary);
+}
+
+.modifier-btn.active {
+    background: var(--guitar-color);
+    border-color: transparent;
+    color: white;
+    box-shadow: 0 0 15px rgba(245, 87, 108, 0.5);
 }
 
 .fretboard-container {
