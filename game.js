@@ -60,6 +60,7 @@ class Game {
         this.maracasStats = { count: 0, sumAbsDiff: 0 };
         this.maracasModeUI = document.getElementById('maracas-mode-ui');
         this.customBpm = 100;
+        this.tapTempoHistory = [];
 
         // ギターモディファイア
         this.isMinorActive = false;
@@ -1876,7 +1877,10 @@ class Game {
             pad.classList.add('shake');
         }
 
-        if (!this.maracasIsPlaying) return;
+        if (!this.maracasIsPlaying) {
+            this.calculateTapTempo();
+            return;
+        }
 
         const now = Date.now();
         const interval = 60000 / this.maracasBpm;
@@ -1906,6 +1910,52 @@ class Game {
         }
 
         this.showMaracasFeedback(diff);
+    }
+
+    calculateTapTempo() {
+        const now = Date.now();
+
+        // Reset if too long since last tap (2 seconds)
+        if (this.tapTempoHistory.length > 0 && now - this.tapTempoHistory[this.tapTempoHistory.length - 1] > 2000) {
+            this.tapTempoHistory = [];
+        }
+
+        this.tapTempoHistory.push(now);
+
+        // Keep last 5 taps (4 intervals)
+        if (this.tapTempoHistory.length > 5) {
+            this.tapTempoHistory.shift();
+        }
+
+        // Calculate BPM if we have at least 2 taps
+        if (this.tapTempoHistory.length >= 2) {
+            let totalDiff = 0;
+            for(let i = 1; i < this.tapTempoHistory.length; i++) {
+                totalDiff += this.tapTempoHistory[i] - this.tapTempoHistory[i-1];
+            }
+            const avgDiff = totalDiff / (this.tapTempoHistory.length - 1);
+            let bpm = Math.round(60000 / avgDiff);
+
+            // Clamp to allowed range
+            bpm = Math.max(40, Math.min(240, bpm));
+
+            // Update State & UI
+            this.customBpm = bpm;
+
+            const bpmSlider = document.getElementById('bpm-slider');
+            const bpmInput = document.getElementById('bpm-input');
+            if (bpmSlider) bpmSlider.value = bpm;
+            if (bpmInput) bpmInput.value = bpm;
+
+            this.updateMaracasBpm(bpm);
+
+            // Show feedback in deviation display
+            const valEl = document.getElementById('maracas-deviation-value');
+            if (valEl) {
+                valEl.textContent = `BPM: ${bpm}`;
+                valEl.style.color = '#fff';
+            }
+        }
     }
 
     showMaracasFeedback(diff) {
