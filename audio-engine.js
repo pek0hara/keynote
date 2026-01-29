@@ -15,6 +15,7 @@ class AudioEngine {
 
         // キャッシュ用バッファ
         this.snareBuffer = null;
+        this.maracasBuffer = null;
 
         // ドラムパターン定義
         this.drumPatterns = {
@@ -497,7 +498,45 @@ class AudioEngine {
             case 'hihat-open':
                 this.playHihat(true);
                 break;
+            case 'maracas':
+                this.playMaracas();
+                break;
         }
+    }
+
+    // マラカス音声生成
+    async playMaracas() {
+        if (!this.isInitialized) return;
+        await this.ensureAudioContextRunning();
+        const now = this.audioContext.currentTime;
+
+        // ノイズでマラカスを生成（バッファをキャッシュして再利用）
+        if (!this.maracasBuffer) {
+            const bufferSize = this.audioContext.sampleRate * 0.1; // 0.1秒
+            const buffer = this.audioContext.createBuffer(1, bufferSize, this.audioContext.sampleRate);
+            const output = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                output[i] = Math.random() * 2 - 1;
+            }
+            this.maracasBuffer = buffer;
+        }
+
+        const noise = this.audioContext.createBufferSource();
+        noise.buffer = this.maracasBuffer;
+
+        // バンドパスフィルターで高域を強調
+        const filter = this.audioContext.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(4000, now);
+        filter.Q.setValueAtTime(1, now);
+
+        const gain = this.audioContext.createGain();
+        gain.gain.setValueAtTime(0.3, now); // 音量は控えめ
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+
+        noise.connect(filter).connect(gain).connect(this.audioContext.destination);
+        noise.start(now);
+        noise.stop(now + 0.1);
     }
 
     // ドラムパターンを取得
