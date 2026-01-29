@@ -46,6 +46,8 @@ class Game {
         this.drumInterval = null; // ドラムパターン再生用インターバル
         this.drumCorrectHits = 0; // リアルタイムの正解数
         this.drumJudgmentTimeout = null; // 判定表示のタイムアウト
+        this.drumPreviewPhase = false; // プレビューフェーズ中かどうか
+        this.drumPreviewCount = 0; // プレビュー周回数（2周で終了）
 
         this.init();
     }
@@ -984,16 +986,17 @@ class Game {
         this.drumIsPlaying = true;
         this.drumBeatCount = 0;
         this.drumUserInputs = [];
+        this.drumPreviewPhase = true;
+        this.drumPreviewCount = 0;
 
         const playBtn = document.getElementById('play-sound-btn');
         playBtn.classList.add('playing');
         playBtn.querySelector('.play-text').textContent = '停止';
 
-        document.getElementById('hint-text').textContent = 'リズムに合わせてドラムを叩こう！';
+        document.getElementById('hint-text').textContent = 'お手本を聴いてください...';
 
         // パターンに合わせてドラムを自動再生
         const pattern = this.drumPattern;
-        const totalBeats = pattern.beats * this.drumMeasures;
         const beatInterval = (60 / this.drumBpm) * 1000 / (pattern.beats === 16 ? 2 : 1); // 16ビートの場合は倍速
 
         const tick = () => {
@@ -1001,21 +1004,54 @@ class Game {
 
             const patternBeat = this.drumBeatCount % pattern.beats;
 
-            // ハイハットを自動再生（ガイド用）
-            if (pattern.hihat[patternBeat]) {
-                audioEngine.playHihat(false);
-            }
+            if (this.drumPreviewPhase) {
+                // プレビューフェーズ: すべてのドラム音を自動再生
+                if (pattern.hihat[patternBeat]) {
+                    audioEngine.playHihat(false);
+                }
+                if (pattern.kick[patternBeat]) {
+                    audioEngine.playKick();
+                }
+                if (pattern.snare[patternBeat]) {
+                    audioEngine.playSnare();
+                }
 
-            // ビートインジケーター更新
-            this.updateDrumUI();
+                // ビートインジケーター更新
+                this.updateDrumUI();
 
-            this.drumBeatCount++;
+                this.drumBeatCount++;
 
-            // 全ビート終了
-            if (this.drumBeatCount >= totalBeats) {
-                this.stopDrumMode();
-                this.evaluateDrumPerformance();
-                return;
+                // 1周完了チェック
+                if (this.drumBeatCount % pattern.beats === 0) {
+                    this.drumPreviewCount++;
+
+                    // 2周終了でプレビューフェーズ終了
+                    if (this.drumPreviewCount >= 2) {
+                        this.drumPreviewPhase = false;
+                        this.drumBeatCount = 0;
+                        this.drumCorrectHits = 0;
+                        this.updateDrumHitCounter();
+                        document.getElementById('hint-text').textContent = 'リズムに合わせてドラムを叩こう！';
+                    }
+                }
+            } else {
+                // 入力フェーズ: ハイハットのみ自動再生（ガイド用）
+                if (pattern.hihat[patternBeat]) {
+                    audioEngine.playHihat(false);
+                }
+
+                // ビートインジケーター更新
+                this.updateDrumUI();
+
+                this.drumBeatCount++;
+
+                // 全ビート終了
+                const totalBeats = pattern.beats * this.drumMeasures;
+                if (this.drumBeatCount >= totalBeats) {
+                    this.stopDrumMode();
+                    this.evaluateDrumPerformance();
+                    return;
+                }
             }
         };
 
@@ -1029,6 +1065,8 @@ class Game {
             this.drumInterval = null;
         }
         this.drumIsPlaying = false;
+        this.drumPreviewPhase = false;
+        this.drumPreviewCount = 0;
 
         const playBtn = document.getElementById('play-sound-btn');
         playBtn.classList.remove('playing');
@@ -1041,6 +1079,11 @@ class Game {
     }
 
     checkDrumAnswer(drumType) {
+        // プレビューフェーズ中は判定しない（音だけ鳴らす）
+        if (this.drumPreviewPhase) {
+            return;
+        }
+
         // 現在のビートでの入力を記録
         const tolerance = 1; // ビートの許容範囲
 
