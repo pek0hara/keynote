@@ -59,6 +59,10 @@ class Game {
         this.maracasStats = { count: 0, sumAbsDiff: 0 };
         this.maracasModeUI = document.getElementById('maracas-mode-ui');
 
+        // ギターモディファイア
+        this.isMinorActive = false;
+        this.isSeventhActive = false;
+
         this.init();
     }
     
@@ -145,6 +149,24 @@ class Game {
         document.querySelectorAll('.fret-position').forEach(position => {
             position.addEventListener('click', () => this.playFretPosition(position));
         });
+
+        // モディファイアボタンのイベントリスナー
+        const minorBtn = document.getElementById('btn-minor');
+        const seventhBtn = document.getElementById('btn-seventh');
+
+        if (minorBtn) {
+            minorBtn.addEventListener('click', () => {
+                this.isMinorActive = !this.isMinorActive;
+                minorBtn.classList.toggle('active', this.isMinorActive);
+            });
+        }
+
+        if (seventhBtn) {
+            seventhBtn.addEventListener('click', () => {
+                this.isSeventhActive = !this.isSeventhActive;
+                seventhBtn.classList.toggle('active', this.isSeventhActive);
+            });
+        }
     }
 
     initBassFretboard() {
@@ -239,13 +261,20 @@ class Game {
         if (!note) return;
 
         if (this.gameMode === 'chord') {
-            // コードモード：音名からコードを推測して再生
+            // コードモード：音名とモディファイアからコードを構築して再生
             const noteName = note.replace(/[0-9]/g, '');
-            const chord = this.findChordByRoot(noteName);
-            if (chord) {
-                audioEngine.playChord(chord, 'guitar');
-                this.animateChord(chord);
-            }
+
+            // モディファイアボタンの状態を反映
+            let targetChord = noteName;
+            if (this.isMinorActive) targetChord += 'm';
+            if (this.isSeventhActive) targetChord += '7';
+
+            // モディファイアが何も押されていない場合は、従来通り推測ロジックを使用する（オプション）
+            // しかし、ボタンがある以上、ユーザーの明示的な操作を優先するのが自然。
+            // ボタンなし＝メジャーコードとして扱う
+
+            audioEngine.playChord(targetChord, 'guitar');
+            this.animateChord(targetChord);
         } else {
             // 単音モード
             audioEngine.playNote(note, 'guitar');
