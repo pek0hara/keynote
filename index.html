@@ -348,33 +348,30 @@
                                     <span class="pattern-name" id="current-pattern-name">8ビート</span>
                                 </div>
                                 <div class="drum-bpm" id="drum-bpm-display">BPM: 100</div>
-                                <div class="drum-beat-indicator" id="drum-beat-indicator">
-                                    <span class="drum-beat-dot" data-beat="0"></span>
-                                    <span class="drum-beat-dot" data-beat="1"></span>
-                                    <span class="drum-beat-dot" data-beat="2"></span>
-                                    <span class="drum-beat-dot" data-beat="3"></span>
-                                    <span class="drum-beat-dot" data-beat="4"></span>
-                                    <span class="drum-beat-dot" data-beat="5"></span>
-                                    <span class="drum-beat-dot" data-beat="6"></span>
-                                    <span class="drum-beat-dot" data-beat="7"></span>
+                            </div>
+
+                            <!-- リズムレーン（流れるノート表示） -->
+                            <div class="drum-rhythm-lane" id="drum-rhythm-lane">
+                                <!-- 判定ライン -->
+                                <div class="drum-judgment-line"></div>
+
+                                <!-- 各楽器のレーン -->
+                                <div class="drum-lane hihat-lane" data-drum="hihat">
+                                    <div class="lane-label">ハイハット</div>
+                                    <div class="lane-notes" id="hihat-lane-notes"></div>
                                 </div>
-                                <div class="drum-progress-info">
-                                    <span id="drum-progress">1 / 16</span>
+                                <div class="drum-lane snare-lane" data-drum="snare">
+                                    <div class="lane-label">スネア</div>
+                                    <div class="lane-notes" id="snare-lane-notes"></div>
+                                </div>
+                                <div class="drum-lane kick-lane" data-drum="kick">
+                                    <div class="lane-label">キック</div>
+                                    <div class="lane-notes" id="kick-lane-notes"></div>
                                 </div>
                             </div>
 
-                            <!-- リアルタイム判定表示 -->
-                            <div class="drum-realtime-feedback">
-                                <div class="drum-hit-counter">
-                                    <span class="hit-label">ヒット</span>
-                                    <span class="hit-count" id="drum-hit-count">0</span>
-                                    <span class="hit-separator">/</span>
-                                    <span class="hit-total" id="drum-hit-total">0</span>
-                                </div>
-                                <div class="drum-judgment" id="drum-judgment">
-                                    <!-- 判定テキストがここに表示される -->
-                                </div>
-                            </div>
+                            <!-- 判定表示 -->
+                            <div class="drum-judgment" id="drum-judgment"></div>
 
                             <!-- 画面フラッシュ効果用オーバーレイ -->
                             <div class="drum-flash-overlay" id="drum-flash-overlay"></div>
