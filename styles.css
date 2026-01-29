@@ -2230,6 +2230,10 @@ input:checked + .toggle-slider:before {
     flex-wrap: wrap;
 }
 
+.bpm-display.hidden {
+    display: none;
+}
+
 .bpm-display, .deviation-display {
     display: flex;
     flex-direction: column;
@@ -2386,6 +2390,50 @@ input:checked + .toggle-slider:before {
     align-items: flex-end;
 }
 
+.metronome-guide {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 4px;
+    height: 120px;
+    transform-origin: bottom center;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.metronome-guide::after {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
+    transition: all 0.1s;
+}
+
+.metronome-guide.left {
+    transform: translateX(-50%) rotate(-35deg);
+}
+
+.metronome-guide.right {
+    transform: translateX(-50%) rotate(35deg);
+}
+
+.metronome-guide.guide-flash::after {
+    background: #feca57;
+    box-shadow: 0 0 20px #feca57, 0 0 40px #feca57;
+    animation: guideFlashAnim 0.4s ease-out forwards;
+}
+
+@keyframes guideFlashAnim {
+    0% { transform: translateX(-50%) scale(2); opacity: 1; }
+    100% { transform: translateX(-50%) scale(1); opacity: 0.3; }
+}
+
 .metronome-rod {
     width: 4px;
     height: 120px;
@@ -2397,6 +2445,7 @@ input:checked + .toggle-slider:before {
     /* Transition duration will be set by JS */
     transition: transform 0.5s ease-in-out;
     box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+    z-index: 1;
 }
 
 .metronome-weight {

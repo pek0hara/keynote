@@ -438,8 +438,11 @@ class Game {
         // ドラムヘッダー表示の切り替え関数
         const toggleDrumHeader = (show) => {
             const patternItem = document.getElementById('pattern-display-item');
-            const bpmItem = document.getElementById('bpm-display-item');
             if (patternItem) patternItem.classList.toggle('hidden', !show);
+        };
+
+        const toggleBpmHeader = (show) => {
+            const bpmItem = document.getElementById('header-bpm-item');
             if (bpmItem) bpmItem.classList.toggle('hidden', !show);
         };
 
@@ -450,12 +453,15 @@ class Game {
         this.drumModeUI.classList.add('hidden');
         this.maracasModeUI.classList.add('hidden');
         toggleDrumHeader(false);
+        toggleBpmHeader(false);
 
         if (this.instrument === 'drum') {
             this.drumModeUI.classList.remove('hidden');
             toggleDrumHeader(true);
+            toggleBpmHeader(true);
         } else if (this.instrument === 'maracas') {
             this.maracasModeUI.classList.remove('hidden');
+            toggleBpmHeader(true);
         } else if (this.instrument === 'bass') {
             this.bassModeUI.classList.remove('hidden');
         } else if (this.instrument === 'piano') {
@@ -1101,7 +1107,7 @@ class Game {
         }
 
         // BPM表示
-        const bpmEl = document.getElementById('drum-bpm-display');
+        const bpmEl = document.getElementById('header-bpm-display');
         if (bpmEl) {
             bpmEl.textContent = this.drumBpm;
         }
@@ -1543,6 +1549,10 @@ class Game {
     setupMaracasQuestion() {
         this.maracasStats = { count: 0, sumAbsDiff: 0, maxDiff: 0, correctCount: 0 };
         document.getElementById('maracas-target-bpm').textContent = this.maracasBpm;
+        const headerBpmEl = document.getElementById('header-bpm-display');
+        if (headerBpmEl) {
+            headerBpmEl.textContent = this.maracasBpm;
+        }
         document.getElementById('maracas-deviation-value').textContent = 'READY';
 
         // メーターリセット
@@ -1607,12 +1617,15 @@ class Game {
 
         // メトロノームアニメーション更新
         if (this.metronomeRod) {
-            if (beatCount % 2 === 0) {
+            const isMovingRight = beatCount % 2 === 0;
+            if (isMovingRight) {
                 this.metronomeRod.classList.remove('swing-left');
                 this.metronomeRod.classList.add('swing-right');
+                this.flashGuide('left');
             } else {
                 this.metronomeRod.classList.remove('swing-right');
                 this.metronomeRod.classList.add('swing-left');
+                this.flashGuide('right');
             }
         }
 
@@ -1620,6 +1633,15 @@ class Game {
         if (beatCount >= this.maracasDurationBeats) {
             this.stopMaracasMode();
             this.evaluateMaracasPerformance();
+        }
+    }
+
+    flashGuide(side) {
+        const guide = document.querySelector(`.metronome-guide.${side}`);
+        if (guide) {
+            guide.classList.remove('guide-flash');
+            void guide.offsetWidth; // Trigger reflow
+            guide.classList.add('guide-flash');
         }
     }
 

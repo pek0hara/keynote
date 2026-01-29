@@ -131,9 +131,9 @@
                             <span class="score-label">パターン</span>
                             <span class="score-value pattern-value" id="current-pattern-name">8ビート</span>
                         </div>
-                        <div class="score-item hidden" id="bpm-display-item">
+                        <div class="score-item hidden" id="header-bpm-item">
                             <span class="score-label">BPM</span>
-                            <span class="score-value" id="drum-bpm-display">100</span>
+                            <span class="score-value" id="header-bpm-display">100</span>
                         </div>
                     </div>
                 </div>
@@ -412,7 +412,7 @@
                         <!-- マラカスモードUI -->
                         <div class="maracas-mode-ui hidden" id="maracas-mode-ui">
                             <div class="maracas-status-display">
-                                <div class="bpm-display">
+                                <div class="bpm-display hidden">
                                     <span class="bpm-label">TARGET BPM</span>
                                     <span class="bpm-value" id="maracas-target-bpm">100</span>
                                 </div>
@@ -428,6 +428,8 @@
 
                             <!-- メトロノームビジュアル -->
                             <div class="metronome-visual">
+                                <div class="metronome-guide left"></div>
+                                <div class="metronome-guide right"></div>
                                 <div class="metronome-body">
                                     <div class="metronome-rod" id="metronome-rod">
                                         <div class="metronome-weight"></div>
