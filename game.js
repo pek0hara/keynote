@@ -917,6 +917,7 @@ class Game {
         this.drumBeatCount = 0;
         this.drumExpectedBeats = [];
         this.drumCorrectHits = 0;
+        this.drumHitBeats = new Set(); // ヒット済みのビートを追跡
 
         // 中級以上ではフルパターン演奏（ハイハットも含む）
         this.drumFullPattern = (this.difficulty === 'medium' || this.difficulty === 'hard');
@@ -939,14 +940,40 @@ class Game {
             }
         }
 
-        // リアルタイムヒットカウンターを初期化
-        this.updateDrumHitCounter();
+        // リズムレーンにノートを生成
+        this.initDrumLaneNotes();
 
         // 判定表示をクリア
         const judgmentEl = document.getElementById('drum-judgment');
         if (judgmentEl) {
             judgmentEl.innerHTML = '';
         }
+    }
+
+    // リズムレーンにノートを生成
+    initDrumLaneNotes() {
+        const lanes = {
+            hihat: document.getElementById('hihat-lane-notes'),
+            snare: document.getElementById('snare-lane-notes'),
+            kick: document.getElementById('kick-lane-notes')
+        };
+
+        // 各レーンをクリア
+        Object.values(lanes).forEach(lane => {
+            if (lane) lane.innerHTML = '';
+        });
+
+        // 期待されるビートごとにノートを生成
+        this.drumExpectedBeats.forEach((expected, index) => {
+            const lane = lanes[expected.type];
+            if (!lane) return;
+
+            const note = document.createElement('div');
+            note.className = `drum-note ${expected.type}`;
+            note.dataset.beat = expected.beat;
+            note.dataset.index = index;
+            lane.appendChild(note);
+        });
     }
 
     updateDrumUI() {
@@ -962,24 +989,56 @@ class Game {
             bpmEl.textContent = `BPM: ${this.drumBpm}`;
         }
 
-        // ビートインジケーターを更新
-        const beatIndicator = document.getElementById('drum-beat-indicator');
-        if (beatIndicator && this.drumPattern) {
-            const beatsInMeasure = this.drumPattern.beats;
-            const beatDots = beatIndicator.querySelectorAll('.drum-beat-dot');
-            const currentBeatInPattern = this.drumBeatCount % beatsInMeasure;
+        // リズムレーンのノート位置を更新
+        this.updateDrumLaneNotes();
+    }
 
-            beatDots.forEach((dot, index) => {
-                dot.classList.toggle('active', index === currentBeatInPattern);
-            });
-        }
+    // リズムレーンのノート位置を更新
+    updateDrumLaneNotes() {
+        const rhythmLane = document.getElementById('drum-rhythm-lane');
+        if (!rhythmLane) return;
 
-        // 進行状況を表示
-        const progressEl = document.getElementById('drum-progress');
-        if (progressEl && this.drumPattern) {
-            const totalBeats = this.drumPattern.beats * this.drumMeasures;
-            progressEl.textContent = `${Math.min(this.drumBeatCount + 1, totalBeats)} / ${totalBeats}`;
-        }
+        // プレビューフェーズの表示切り替え
+        rhythmLane.classList.toggle('preview', this.drumPreviewPhase);
+
+        const pattern = this.drumPattern;
+        if (!pattern) return;
+
+        const totalBeats = pattern.beats * this.drumMeasures;
+        const currentBeat = this.drumBeatCount;
+
+        // レーンの幅（判定ライン位置を考慮）
+        const laneWidth = rhythmLane.offsetWidth;
+        const judgmentLinePos = 60; // 判定ラインの位置（px）
+        const noteWidth = 30;
+        const visibleBeats = 8; // 表示するビート数
+
+        // 全ノートの位置を更新
+        const notes = rhythmLane.querySelectorAll('.drum-note');
+        notes.forEach(note => {
+            const noteBeat = parseInt(note.dataset.beat);
+            const noteIndex = parseInt(note.dataset.index);
+
+            // 現在のビートからの相対位置を計算
+            const beatDiff = noteBeat - currentBeat;
+
+            // ノートの位置を計算（判定ラインを基準に右に流れていく）
+            const positionRatio = beatDiff / visibleBeats;
+            const leftPos = judgmentLinePos + (laneWidth - judgmentLinePos - noteWidth) * positionRatio;
+
+            note.style.left = `${leftPos}px`;
+
+            // 次に打つべきノートを強調
+            const isNextNote = beatDiff >= 0 && beatDiff <= 1 && !this.drumHitBeats.has(noteIndex);
+            note.classList.toggle('next-note', isNextNote && !this.drumPreviewPhase);
+
+            // 画面外のノートを非表示
+            if (beatDiff < -1 || beatDiff > visibleBeats) {
+                note.style.opacity = '0';
+            } else {
+                note.style.opacity = note.classList.contains('hit') ? '0.3' : '1';
+            }
+        });
     }
 
     startDrumMode() {
@@ -1037,7 +1096,11 @@ class Game {
                         this.drumPreviewPhase = false;
                         this.drumBeatCount = 0;
                         this.drumCorrectHits = 0;
-                        this.updateDrumHitCounter();
+                        this.drumHitBeats = new Set(); // ヒット状態をリセット
+                        // ノートのヒット状態をリセット
+                        document.querySelectorAll('.drum-note').forEach(note => {
+                            note.classList.remove('hit');
+                        });
                         if (this.drumFullPattern) {
                             document.getElementById('hint-text').textContent = 'パターンを演奏しよう！';
                         } else {
@@ -1085,10 +1148,11 @@ class Game {
         playBtn.classList.remove('playing');
         playBtn.querySelector('.play-text').textContent = '音を聴く';
 
-        // ビートインジケーターをリセット（activeと判定マーク両方）
-        document.querySelectorAll('.drum-beat-dot').forEach(dot => {
-            dot.classList.remove('active', 'hit-correct', 'hit-wrong');
-        });
+        // リズムレーンのプレビュー状態をリセット
+        const rhythmLane = document.getElementById('drum-rhythm-lane');
+        if (rhythmLane) {
+            rhythmLane.classList.remove('preview');
+        }
     }
 
     checkDrumAnswer(drumType) {
@@ -1112,20 +1176,39 @@ class Game {
         const flashOverlay = document.getElementById('drum-flash-overlay');
 
         if (pad) {
-            // 期待されるビートと一致するかチェック
+            // 期待されるビートと一致するかチェック（まだヒットしていないもののみ）
             const expectedAtBeat = this.drumExpectedBeats.filter(
-                e => Math.abs(e.beat - this.drumBeatCount) <= tolerance && e.type === drumType
+                (e, idx) => Math.abs(e.beat - this.drumBeatCount) <= tolerance &&
+                           e.type === drumType &&
+                           !this.drumHitBeats.has(idx)
             );
 
             // タイミングの精度を計算（判定用）
             let timingDiff = tolerance + 1;
+            let matchedIndex = -1;
             if (expectedAtBeat.length > 0) {
-                timingDiff = Math.min(...expectedAtBeat.map(e => Math.abs(e.beat - this.drumBeatCount)));
+                const minDiff = Math.min(...expectedAtBeat.map(e => Math.abs(e.beat - this.drumBeatCount)));
+                timingDiff = minDiff;
+                // マッチしたノートのインデックスを取得
+                const matchedExpected = expectedAtBeat.find(e => Math.abs(e.beat - this.drumBeatCount) === minDiff);
+                if (matchedExpected) {
+                    matchedIndex = this.drumExpectedBeats.indexOf(matchedExpected);
+                }
             }
+
+            // ユーザー入力マーカーを表示
+            const isCorrect = expectedAtBeat.length > 0;
+            this.showDrumInputMarker(drumType, isCorrect);
 
             if (expectedAtBeat.length > 0) {
                 // 正解時のフィードバック
                 this.drumCorrectHits++;
+
+                // ヒット済みとしてマーク
+                if (matchedIndex >= 0) {
+                    this.drumHitBeats.add(matchedIndex);
+                    this.markNoteAsHit(matchedIndex);
+                }
 
                 // パッドのアニメーション
                 pad.classList.remove('correct', 'wrong');
@@ -1154,9 +1237,6 @@ class Game {
                     judgmentClass = 'good';
                 }
                 this.showDrumJudgment(judgmentText, judgmentClass);
-
-                // ビートインジケーターに正解マーク
-                this.markBeatIndicator(this.drumBeatCount, true);
             } else {
                 // 不正解時のフィードバック
                 pad.classList.remove('correct', 'wrong');
@@ -1174,13 +1254,35 @@ class Game {
 
                 // 判定テキスト表示
                 this.showDrumJudgment('MISS', 'miss');
-
-                // ビートインジケーターに不正解マーク
-                this.markBeatIndicator(this.drumBeatCount, false);
             }
+        }
+    }
 
-            // ヒットカウンターを更新
-            this.updateDrumHitCounter();
+    // ユーザー入力マーカーを表示
+    showDrumInputMarker(drumType, isCorrect) {
+        const laneNotes = document.getElementById(`${drumType}-lane-notes`);
+        if (!laneNotes) return;
+
+        const rhythmLane = document.getElementById('drum-rhythm-lane');
+        if (!rhythmLane) return;
+
+        const judgmentLinePos = 60; // 判定ラインの位置
+
+        const marker = document.createElement('div');
+        marker.className = `drum-input-marker ${isCorrect ? 'correct' : 'wrong'}`;
+        marker.style.left = `${judgmentLinePos - 12}px`; // マーカーを判定ライン上に配置
+
+        laneNotes.appendChild(marker);
+
+        // アニメーション後に削除
+        setTimeout(() => marker.remove(), 500);
+    }
+
+    // ノートをヒット済みとしてマーク
+    markNoteAsHit(noteIndex) {
+        const note = document.querySelector(`.drum-note[data-index="${noteIndex}"]`);
+        if (note) {
+            note.classList.add('hit');
         }
     }
 

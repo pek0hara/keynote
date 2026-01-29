@@ -1868,21 +1868,224 @@ body {
 
 /* モバイル対応 */
 @media (max-width: 640px) {
-    .drum-realtime-feedback {
-        flex-direction: column;
-        gap: 0.5rem;
-        padding: 0.5rem 1rem;
-    }
-
-    .drum-hit-counter {
-        font-size: 1rem;
-    }
-
-    .hit-count {
-        font-size: 1.3rem;
-    }
-
     .judgment-text {
         font-size: 1.2rem;
+    }
+}
+
+/* ========== リズムレーン（流れるノート表示） ========== */
+.drum-rhythm-lane {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-md);
+    overflow: hidden;
+}
+
+/* 判定ライン */
+.drum-judgment-line {
+    position: absolute;
+    left: 60px;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(180deg, #ff6b6b, #feca57, #38ef7d);
+    box-shadow: 0 0 15px rgba(255, 107, 107, 0.8), 0 0 30px rgba(254, 202, 87, 0.5);
+    z-index: 10;
+    border-radius: 2px;
+}
+
+/* 各楽器のレーン */
+.drum-lane {
+    position: relative;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    margin-bottom: var(--spacing-sm);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.drum-lane:last-child {
+    margin-bottom: 0;
+}
+
+/* レーンの背景色 */
+.hihat-lane {
+    background: linear-gradient(90deg, rgba(17, 153, 142, 0.3) 0%, rgba(17, 153, 142, 0.1) 100%);
+    border-left: 3px solid #38ef7d;
+}
+
+.snare-lane {
+    background: linear-gradient(90deg, rgba(245, 87, 108, 0.3) 0%, rgba(245, 87, 108, 0.1) 100%);
+    border-left: 3px solid #f5576c;
+}
+
+.kick-lane {
+    background: linear-gradient(90deg, rgba(102, 126, 234, 0.3) 0%, rgba(102, 126, 234, 0.1) 100%);
+    border-left: 3px solid #667eea;
+}
+
+/* レーンラベル */
+.lane-label {
+    position: absolute;
+    left: 8px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.7);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    z-index: 5;
+    white-space: nowrap;
+}
+
+/* ノートコンテナ */
+.lane-notes {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+}
+
+/* ノート（基本スタイル） */
+.drum-note {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.8rem;
+    transition: left 0.05s linear;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* 各楽器のノート色 */
+.drum-note.hihat {
+    background: linear-gradient(135deg, #11998e, #38ef7d);
+    border: 2px solid #38ef7d;
+    color: white;
+}
+
+.drum-note.snare {
+    background: linear-gradient(135deg, #f5576c, #f093fb);
+    border: 2px solid #f5576c;
+    color: white;
+}
+
+.drum-note.kick {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border: 2px solid #667eea;
+    color: white;
+}
+
+/* 次に打つべきノート（強調表示） */
+.drum-note.next-note {
+    transform: translateY(-50%) scale(1.2);
+    box-shadow: 0 0 20px currentColor, 0 0 40px currentColor;
+    animation: nextNotePulse 0.5s ease-in-out infinite;
+    z-index: 15;
+}
+
+.drum-note.next-note.hihat {
+    box-shadow: 0 0 20px #38ef7d, 0 0 40px #38ef7d;
+}
+
+.drum-note.next-note.snare {
+    box-shadow: 0 0 20px #f5576c, 0 0 40px #f5576c;
+}
+
+.drum-note.next-note.kick {
+    box-shadow: 0 0 20px #667eea, 0 0 40px #667eea;
+}
+
+@keyframes nextNotePulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* ヒット済みノート */
+.drum-note.hit {
+    opacity: 0.3;
+    transform: translateY(-50%) scale(0.8);
+}
+
+/* ユーザー入力マーカー */
+.drum-input-marker {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 3px solid;
+    background: transparent;
+    z-index: 20;
+    pointer-events: none;
+}
+
+.drum-input-marker.correct {
+    border-color: #38ef7d;
+    box-shadow: 0 0 15px rgba(56, 239, 125, 0.8);
+    animation: inputMarkerCorrect 0.5s ease-out forwards;
+}
+
+.drum-input-marker.wrong {
+    border-color: #f45c43;
+    box-shadow: 0 0 15px rgba(244, 92, 67, 0.8);
+    animation: inputMarkerWrong 0.5s ease-out forwards;
+}
+
+@keyframes inputMarkerCorrect {
+    0% { transform: translateY(-50%) scale(0.5); opacity: 1; }
+    100% { transform: translateY(-50%) scale(1.5); opacity: 0; }
+}
+
+@keyframes inputMarkerWrong {
+    0% { transform: translateY(-50%) scale(0.5); opacity: 1; }
+    50% { transform: translateY(-50%) translateX(-3px) scale(1); }
+    100% { transform: translateY(-50%) translateX(3px) scale(1); opacity: 0; }
+}
+
+/* プレビューフェーズ中のスタイル */
+.drum-rhythm-lane.preview .drum-note {
+    opacity: 0.6;
+}
+
+.drum-rhythm-lane.preview .drum-judgment-line {
+    opacity: 0.5;
+}
+
+/* モバイル対応 */
+@media (max-width: 640px) {
+    .drum-rhythm-lane {
+        max-width: 100%;
+        padding: var(--spacing-sm);
+    }
+
+    .drum-lane {
+        height: 40px;
+    }
+
+    .drum-note {
+        width: 24px;
+        height: 24px;
+        font-size: 0.7rem;
+    }
+
+    .drum-judgment-line {
+        left: 50px;
+        width: 3px;
+    }
+
+    .lane-label {
+        font-size: 0.6rem;
     }
 }
