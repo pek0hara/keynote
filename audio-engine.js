@@ -13,6 +13,9 @@ class AudioEngine {
         this.metronomeBpm = 100;
         this.metronomeCallback = null;
 
+        // キャッシュ用バッファ
+        this.snareBuffer = null;
+
         // ドラムパターン定義
         this.drumPatterns = {
             // 基本的な8ビートパターン
@@ -403,16 +406,19 @@ class AudioEngine {
         await this.ensureAudioContextRunning();
         const now = this.audioContext.currentTime;
 
-        // ノイズでスネアを生成
-        const bufferSize = this.audioContext.sampleRate * 0.2;
-        const buffer = this.audioContext.createBuffer(1, bufferSize, this.audioContext.sampleRate);
-        const output = buffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) {
-            output[i] = Math.random() * 2 - 1;
+        // ノイズでスネアを生成（バッファをキャッシュして再利用）
+        if (!this.snareBuffer) {
+            const bufferSize = this.audioContext.sampleRate * 0.2;
+            const buffer = this.audioContext.createBuffer(1, bufferSize, this.audioContext.sampleRate);
+            const output = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                output[i] = Math.random() * 2 - 1;
+            }
+            this.snareBuffer = buffer;
         }
 
         const noise = this.audioContext.createBufferSource();
-        noise.buffer = buffer;
+        noise.buffer = this.snareBuffer;
 
         // ハイパスフィルターでスネアらしいサウンドに
         const filter = this.audioContext.createBiquadFilter();
