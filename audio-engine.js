@@ -684,31 +684,50 @@ class AudioEngine {
     getMajorScaleNotes(rootNote, availableNotes) {
         // ルート音から音名を取得（オクターブ番号を除去）
         const rootNoteName = rootNote.replace(/[0-9]/g, '');
+        const scaleNotes = this.getScaleNotes(rootNoteName, 'major');
 
+        // availableNotes からスケール上の音のみを抽出
+        const filteredNotes = availableNotes.filter(note => {
+            const noteName = note.replace(/[0-9]/g, '');
+            return scaleNotes.includes(noteName);
+        });
+
+        // スケール音が見つからない場合は全ての音を返す
+        return filteredNotes.length > 0 ? filteredNotes : availableNotes;
+    }
+
+    // スケール構成音を取得（音名のみの配列を返す）
+    getScaleNotes(rootName, scaleType = 'major') {
         // 半音階（クロマティックスケール）
         const chromaticScale = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
         // ルート音のインデックスを取得
-        const rootIndex = chromaticScale.indexOf(rootNoteName);
-        if (rootIndex === -1) return availableNotes; // ルート音が見つからない場合は全ての音を返す
+        const rootIndex = chromaticScale.indexOf(rootName);
+        if (rootIndex === -1) return [];
 
-        // メジャースケールの音程（半音数）：全全半全全全半
-        const intervals = [0, 2, 4, 5, 7, 9, 11];
+        let intervals;
+        switch (scaleType) {
+            case 'major':
+                // メジャースケール: 全全半全全全半
+                intervals = [0, 2, 4, 5, 7, 9, 11];
+                break;
+            case 'minor':
+                // ナチュラルマイナースケール: 全半全全半全全
+                intervals = [0, 2, 3, 5, 7, 8, 10];
+                break;
+            case 'mixolydian':
+                // ミクソリディアンスケール (7thコード用): メジャーの第7音を半音下げる
+                intervals = [0, 2, 4, 5, 7, 9, 10];
+                break;
+            default:
+                intervals = [0, 2, 4, 5, 7, 9, 11]; // デフォルトはメジャー
+        }
 
         // スケール上の音名を生成
-        const scaleNoteNames = intervals.map(interval => {
+        return intervals.map(interval => {
             const noteIndex = (rootIndex + interval) % 12;
             return chromaticScale[noteIndex];
         });
-
-        // availableNotes からスケール上の音のみを抽出
-        const scaleNotes = availableNotes.filter(note => {
-            const noteName = note.replace(/[0-9]/g, '');
-            return scaleNoteNames.includes(noteName);
-        });
-
-        // スケール音が見つからない場合は全ての音を返す
-        return scaleNotes.length > 0 ? scaleNotes : availableNotes;
     }
 }
 

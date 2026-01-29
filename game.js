@@ -31,6 +31,7 @@ class Game {
         this.bassBeatsPerChord = 4; // 1コードあたりの拍数
         this.bassBpm = 100; // BPM
         this.bassIsPlaying = false; // 再生中フラグ
+        this.isBassGuideActive = false; // ガイド表示フラグ
         this.bassUserInputs = []; // ユーザーの入力履歴
         this.bassExpectedRoots = []; // 期待されるルート音
 
@@ -124,6 +125,15 @@ class Game {
         document.querySelectorAll('.bass-fret-position').forEach(position => {
             position.addEventListener('click', () => this.playBassPosition(position));
         });
+
+        // ガイド切り替えスイッチ
+        const guideToggle = document.getElementById('bass-guide-checkbox');
+        if (guideToggle) {
+            guideToggle.addEventListener('change', (e) => {
+                this.isBassGuideActive = e.target.checked;
+                this.updateBassGuide();
+            });
+        }
     }
 
     initDrumPads() {
@@ -793,6 +803,8 @@ class Game {
 
         document.getElementById('hint-text').textContent = 'コードに合わせてルート音を弾こう！';
 
+        this.updateBassGuide();
+
         // メトロノーム開始とコード再生
         audioEngine.startMetronome(this.bassBpm, (beatCount, isAccent) => {
             this.onBassBeat(beatCount, isAccent);
@@ -830,6 +842,7 @@ class Game {
 
         // UIを更新
         this.updateBassUI();
+        this.updateBassGuide();
 
         // ビートインジケーターを更新
         const beatInChord = beatCount % this.bassBeatsPerChord;
@@ -844,6 +857,41 @@ class Game {
                 audioEngine.playChord(currentChord, 'guitar');
             }
         }
+    }
+
+    updateBassGuide() {
+        // 全てのガイドをクリア
+        document.querySelectorAll('.bass-fret-position').forEach(pos => {
+            pos.classList.remove('scale-guide', 'root-guide');
+        });
+
+        if (!this.isBassGuideActive || !this.bassIsPlaying) return;
+
+        // 現在のコードを取得
+        const currentChord = this.bassChordProgression[this.bassCurrentChordIndex];
+        if (!currentChord) return;
+
+        // コード情報解析
+        const rootName = audioEngine.getChordRoot(currentChord);
+        let scaleType = 'major';
+        if (currentChord.includes('m') && !currentChord.includes('maj')) scaleType = 'minor';
+        else if (currentChord.includes('7') && !currentChord.includes('maj')) scaleType = 'mixolydian';
+
+        // スケール音を取得
+        const scaleNotes = audioEngine.getScaleNotes(rootName, scaleType);
+
+        // 指板を走査してハイライト
+        document.querySelectorAll('.bass-fret-position').forEach(pos => {
+            const note = pos.dataset.note; // 例: "G2"
+            if (!note) return;
+            const noteName = note.replace(/[0-9]/g, '');
+
+            if (noteName === rootName) {
+                pos.classList.add('root-guide');
+            } else if (scaleNotes.includes(noteName)) {
+                pos.classList.add('scale-guide');
+            }
+        });
     }
 
     checkBassAnswer(note) {
