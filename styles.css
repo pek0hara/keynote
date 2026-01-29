@@ -2373,3 +2373,48 @@ input:checked + .toggle-slider:before {
     0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
     100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
 }
+
+/* ========== メトロノームビジュアル ========== */
+.metronome-visual {
+    position: relative;
+    width: 200px;
+    height: 150px;
+    margin: 0 auto;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+}
+
+.metronome-rod {
+    width: 4px;
+    height: 120px;
+    background: linear-gradient(to top, #ccc, #fff);
+    border-radius: 2px;
+    position: relative;
+    transform-origin: bottom center;
+    transform: rotate(0deg);
+    /* Transition duration will be set by JS */
+    transition: transform 0.5s ease-in-out;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+.metronome-weight {
+    width: 16px;
+    height: 16px;
+    background: var(--primary-gradient);
+    border-radius: 50%;
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    box-shadow: 0 0 10px rgba(102, 126, 234, 0.8);
+}
+
+.metronome-rod.swing-left {
+    transform: rotate(-35deg);
+}
+
+.metronome-rod.swing-right {
+    transform: rotate(35deg);
+}
