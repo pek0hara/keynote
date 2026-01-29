@@ -78,6 +78,7 @@ class Game {
         this.drumModeUI = document.getElementById('drum-mode-ui');
         this.drumPads = document.getElementById('drum-pads');
         this.maracasModeUI = document.getElementById('maracas-mode-ui');
+        this.metronomeRod = document.getElementById('metronome-rod');
 
         // ボタンイベント
         document.querySelectorAll('.instrument-btn').forEach(btn => {
@@ -1557,6 +1558,15 @@ class Game {
         this.maracasBeatCount = 0;
         this.maracasStats = { count: 0, sumAbsDiff: 0, maxDiff: 0, correctCount: 0 };
 
+        // メトロノームビジュアルの初期化
+        if (this.metronomeRod) {
+            const intervalSec = 60 / this.maracasBpm;
+            this.metronomeRod.style.transitionDuration = `${intervalSec}s`;
+            // 左からスタートするために初期状態を設定
+            this.metronomeRod.classList.remove('swing-right');
+            this.metronomeRod.classList.add('swing-left');
+        }
+
         const playBtn = document.getElementById('play-sound-btn');
         playBtn.classList.add('playing');
         playBtn.querySelector('.play-text').textContent = '停止';
@@ -1574,6 +1584,12 @@ class Game {
         audioEngine.stopMetronome();
         this.maracasIsPlaying = false;
 
+        // メトロノームビジュアルのリセット
+        if (this.metronomeRod) {
+            this.metronomeRod.style.transitionDuration = '0.3s';
+            this.metronomeRod.classList.remove('swing-left', 'swing-right');
+        }
+
         const playBtn = document.getElementById('play-sound-btn');
         playBtn.classList.remove('playing');
         playBtn.querySelector('.play-text').textContent = '音を聴く';
@@ -1582,6 +1598,17 @@ class Game {
     onMaracasBeat(beatCount) {
         this.maracasLastBeatTime = Date.now();
         this.maracasBeatCount = beatCount;
+
+        // メトロノームアニメーション更新
+        if (this.metronomeRod) {
+            if (beatCount % 2 === 0) {
+                this.metronomeRod.classList.remove('swing-left');
+                this.metronomeRod.classList.add('swing-right');
+            } else {
+                this.metronomeRod.classList.remove('swing-right');
+                this.metronomeRod.classList.add('swing-left');
+            }
+        }
 
         // セッション終了チェック
         if (beatCount >= this.maracasDurationBeats) {
