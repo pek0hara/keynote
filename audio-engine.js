@@ -7,6 +7,7 @@ class AudioEngine {
     constructor() {
         this.audioContext = null;
         this.isInitialized = false;
+        this.listenersAttached = false;
 
         // メトロノーム関連
         this.metronomeInterval = null;
@@ -201,22 +202,33 @@ class AudioEngine {
     }
     
     async initialize() {
-        if (this.isInitialized) return;
+        await this.createContext();
+        this.setupListeners();
+    }
+
+    async createContext() {
+        if (this.isInitialized && this.audioContext && this.audioContext.state !== 'closed') return;
         try {
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
             if (this.audioContext.state === 'suspended') {
                 await this.audioContext.resume();
             }
             this.isInitialized = true;
-
-            // ページがバックグラウンドから復帰した時に AudioContext を再開
-            this.setupVisibilityChangeHandler();
-
-            // ユーザー操作時に AudioContext を再開（バックグラウンド復帰対策）
-            this.setupUserInteractionHandler();
         } catch (error) {
-            console.error('Failed to initialize AudioEngine:', error);
+            console.error('Failed to create AudioContext:', error);
         }
+    }
+
+    setupListeners() {
+        if (this.listenersAttached) return;
+
+        // ページがバックグラウンドから復帰した時に AudioContext を再開
+        this.setupVisibilityChangeHandler();
+
+        // ユーザー操作時に AudioContext を再開（バックグラウンド復帰対策）
+        this.setupUserInteractionHandler();
+
+        this.listenersAttached = true;
     }
 
     // ページ表示状態の変更を監視して AudioContext を再開
@@ -239,12 +251,20 @@ class AudioEngine {
     // ユーザー操作を監視して AudioContext を再開
     setupUserInteractionHandler() {
         const resumeAudio = async () => {
-            if (this.audioContext && this.audioContext.state !== 'running' && this.audioContext.state !== 'closed') {
+            await this.ensureAudioContextRunning();
+
+            // Web Audio APIのロック解除用（特にiOS/Android）
+            // 無音のオシレーターを一瞬再生することでオーディオエンジンを確実に起動する
+            if (this.audioContext && this.audioContext.state === 'running') {
                 try {
-                    await this.audioContext.resume();
-                    // console.log('AudioContext resumed via user interaction');
-                } catch (err) {
-                    console.warn('Failed to resume AudioContext on interaction:', err);
+                    const osc = this.audioContext.createOscillator();
+                    const gain = this.audioContext.createGain();
+                    gain.gain.value = 0; // 無音
+                    osc.connect(gain).connect(this.audioContext.destination);
+                    osc.start(0);
+                    osc.stop(0.001);
+                } catch (e) {
+                    // エラーは無視（すでに破棄されている場合など）
                 }
             }
         };
@@ -257,9 +277,14 @@ class AudioEngine {
 
     // AudioContext が running 状態であることを保証する
     async ensureAudioContextRunning() {
-        // stateがsuspendedまたはinterrupted（iOS）の場合はresumeを試みる
-        // running以外かつclosed以外ならresumeを実行
-        if (this.audioContext && this.audioContext.state !== 'running' && this.audioContext.state !== 'closed') {
+        // AudioContextがない、または閉じている場合は再初期化
+        if (!this.audioContext || this.audioContext.state === 'closed') {
+            await this.createContext();
+            return;
+        }
+
+        // running以外ならresumeを試みる
+        if (this.audioContext.state !== 'running') {
             try {
                 await this.audioContext.resume();
             } catch (err) {
