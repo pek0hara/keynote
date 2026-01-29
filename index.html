@@ -123,6 +123,14 @@
                             <span class="score-label">問題</span>
                             <span class="score-value" id="question-number">1/10</span>
                         </div>
+                        <div class="score-item hidden" id="pattern-display-item">
+                            <span class="score-label">パターン</span>
+                            <span class="score-value pattern-value" id="current-pattern-name">8ビート</span>
+                        </div>
+                        <div class="score-item hidden" id="bpm-display-item">
+                            <span class="score-label">BPM</span>
+                            <span class="score-value" id="drum-bpm-display">100</span>
+                        </div>
                     </div>
                 </div>
 
@@ -341,15 +349,6 @@
 
                         <!-- ドラムモードUI -->
                         <div class="drum-mode-ui hidden" id="drum-mode-ui">
-                            <!-- パターン情報表示 -->
-                            <div class="drum-pattern-display">
-                                <div class="pattern-info">
-                                    <span class="pattern-label">パターン</span>
-                                    <span class="pattern-name" id="current-pattern-name">8ビート</span>
-                                </div>
-                                <div class="drum-bpm" id="drum-bpm-display">BPM: 100</div>
-                            </div>
-
                             <!-- リズムレーン（流れるノート表示） -->
                             <div class="drum-rhythm-lane" id="drum-rhythm-lane">
                                 <!-- 判定ライン -->
