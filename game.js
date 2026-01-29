@@ -913,7 +913,7 @@ class Game {
     updateBassGuide() {
         // 全てのガイドをクリア
         document.querySelectorAll('.bass-fret-position').forEach(pos => {
-            pos.classList.remove('scale-guide', 'root-guide');
+            pos.classList.remove('scale-guide', 'root-guide', 'chord-tone-guide');
         });
 
         if (!this.isBassGuideActive || !this.bassIsPlaying) return;
@@ -924,12 +924,15 @@ class Game {
 
         // コード情報解析
         const rootName = audioEngine.getChordRoot(currentChord);
-        let scaleType = 'major';
-        if (currentChord.includes('m') && !currentChord.includes('maj')) scaleType = 'minor';
-        else if (currentChord.includes('7') && !currentChord.includes('maj')) scaleType = 'mixolydian';
 
-        // スケール音を取得
-        const scaleNotes = audioEngine.getScaleNotes(rootName, scaleType);
+        // スケール表示: 常にCメジャー（ユーザー要望）
+        const scaleRoot = 'C';
+        const scaleType = 'major';
+        const scaleNotes = audioEngine.getScaleNotes(scaleRoot, scaleType);
+
+        // 構成音（コードトーン）を取得
+        const chordNotesWithOctave = audioEngine.getChordNotes(currentChord);
+        const chordToneNames = chordNotesWithOctave.map(note => note.replace(/[0-9]/g, ''));
 
         // 指板を走査してハイライト
         document.querySelectorAll('.bass-fret-position').forEach(pos => {
@@ -937,8 +940,11 @@ class Game {
             if (!note) return;
             const noteName = note.replace(/[0-9]/g, '');
 
+            // 優先順位: ルート > 構成音 > スケール
             if (noteName === rootName) {
                 pos.classList.add('root-guide');
+            } else if (chordToneNames.includes(noteName)) {
+                pos.classList.add('chord-tone-guide');
             } else if (scaleNotes.includes(noteName)) {
                 pos.classList.add('scale-guide');
             }
