@@ -192,8 +192,16 @@ class AudioEngine {
     // ページ表示状態の変更を監視して AudioContext を再開
     setupVisibilityChangeHandler() {
         document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'visible' && this.audioContext) {
-                this.ensureAudioContextRunning();
+            if (document.visibilityState === 'visible') {
+                if (this.audioContext) {
+                    this.ensureAudioContextRunning();
+                }
+            } else if (document.visibilityState === 'hidden') {
+                // バックグラウンド時は明示的に suspend することで、
+                // 復帰時に resume が確実に機能するようにする（ゾンビ状態の防止）
+                if (this.audioContext && this.audioContext.state === 'running') {
+                    this.audioContext.suspend().catch(err => console.warn('Failed to suspend AudioContext:', err));
+                }
             }
         });
     }
