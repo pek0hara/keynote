@@ -261,8 +261,8 @@ class Game {
 
         if (this.instrument === 'drum') {
             easyDesc.textContent = '8ビート・BPM80';
-            mediumDesc.textContent = 'ロック・BPM100';
-            hardDesc.textContent = 'ファンク・BPM120';
+            mediumDesc.textContent = 'ロック・BPM100・フルパターン';
+            hardDesc.textContent = 'ファンク・BPM120・フルパターン';
         } else if (this.instrument === 'bass') {
             easyDesc.textContent = '4コード・BPM80';
             mediumDesc.textContent = '6コード・BPM100';
@@ -918,7 +918,10 @@ class Game {
         this.drumExpectedBeats = [];
         this.drumCorrectHits = 0;
 
-        // 期待される入力タイミングを生成（キックとスネアのみ対象）
+        // 中級以上ではフルパターン演奏（ハイハットも含む）
+        this.drumFullPattern = (this.difficulty === 'medium' || this.difficulty === 'hard');
+
+        // 期待される入力タイミングを生成
         const pattern = this.drumPattern;
         const totalBeats = pattern.beats * this.drumMeasures;
 
@@ -929,6 +932,10 @@ class Game {
             }
             if (pattern.snare[patternBeat]) {
                 this.drumExpectedBeats.push({ beat, type: 'snare' });
+            }
+            // 中級以上ではハイハットも対象
+            if (this.drumFullPattern && pattern.hihat[patternBeat]) {
+                this.drumExpectedBeats.push({ beat, type: 'hihat' });
             }
         }
 
@@ -1031,12 +1038,18 @@ class Game {
                         this.drumBeatCount = 0;
                         this.drumCorrectHits = 0;
                         this.updateDrumHitCounter();
-                        document.getElementById('hint-text').textContent = 'リズムに合わせてドラムを叩こう！';
+                        if (this.drumFullPattern) {
+                            document.getElementById('hint-text').textContent = 'パターンを演奏しよう！';
+                        } else {
+                            document.getElementById('hint-text').textContent = 'リズムに合わせてドラムを叩こう！';
+                        }
                     }
                 }
             } else {
-                // 入力フェーズ: ハイハットのみ自動再生（ガイド用）
-                if (pattern.hihat[patternBeat]) {
+                // 入力フェーズ
+                // 初級: ハイハットのみ自動再生（ガイド用）
+                // 中級以上: 全ドラムをユーザーが演奏（自動再生なし）
+                if (!this.drumFullPattern && pattern.hihat[patternBeat]) {
                     audioEngine.playHihat(false);
                 }
 
