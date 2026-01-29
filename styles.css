@@ -4,24 +4,32 @@
 
 /* CSS変数（デザイントークン） */
 :root {
-    /* カラーパレット */
-    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-    --error-gradient: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+    /* カラーパレット - モダンでフラットな配色 */
+    --primary-color: #6366f1; /* Indigo */
+    --primary-hover: #4f46e5;
+    --secondary-color: #ec4899; /* Pink */
+    --success-color: #10b981; /* Emerald */
+    --error-color: #ef4444; /* Red */
+    --accent-color: #8b5cf6; /* Violet */
     
-    --bg-dark: #0f0f1a;
-    --bg-darker: #080810;
-    --glass-bg: rgba(255, 255, 255, 0.08);
-    --glass-border: rgba(255, 255, 255, 0.15);
+    --bg-dark: #1e293b; /* Slate 800 */
+    --bg-darker: #0f172a; /* Slate 900 */
+    --card-bg: #1e293b;
+    --card-border: #334155; /* Slate 700 */
     
-    --text-primary: #ffffff;
-    --text-secondary: rgba(255, 255, 255, 0.7);
-    --text-muted: rgba(255, 255, 255, 0.4);
+    --text-primary: #f8fafc; /* Slate 50 */
+    --text-secondary: #cbd5e1; /* Slate 300 */
+    --text-muted: #94a3b8; /* Slate 400 */
     
-    --piano-color: #667eea;
-    --guitar-color: #f5576c;
+    --piano-color: #6366f1;
+    --guitar-color: #ec4899;
     
+    /* グラデーション（互換性のため残すが、控えめに使用） */
+    --primary-gradient: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    --secondary-gradient: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+    --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    --error-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+
     /* スペーシング */
     /* スペーシング */
     --spacing-xs: 0.2rem;
@@ -65,7 +73,7 @@ html {
 
 body {
     font-family: 'Noto Sans JP', 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
-    background: var(--bg-dark);
+    background: var(--bg-darker);
     color: var(--text-primary);
     min-height: 100vh;
     line-height: 1.6;
@@ -78,52 +86,11 @@ body {
     display: flex;
     flex-direction: column;
     position: relative;
-    background: 
-        radial-gradient(ellipse at top left, rgba(102, 126, 234, 0.15) 0%, transparent 50%),
-        radial-gradient(ellipse at bottom right, rgba(245, 87, 108, 0.15) 0%, transparent 50%),
-        var(--bg-dark);
-}
-
-/* 背景エフェクト - 浮遊する音符 */
-.bg-effects {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 0;
-    overflow: hidden;
-}
-
-.floating-note {
-    position: absolute;
-    font-size: 2rem;
-    color: rgba(255, 255, 255, 0.1);
-    animation: float 15s infinite ease-in-out;
-}
-
-.note-1 { top: 10%; left: 5%; animation-delay: 0s; font-size: 3rem; }
-.note-2 { top: 20%; right: 10%; animation-delay: -2s; font-size: 2.5rem; }
-.note-3 { top: 50%; left: 15%; animation-delay: -4s; }
-.note-4 { top: 70%; right: 20%; animation-delay: -6s; font-size: 2.5rem; }
-.note-5 { top: 85%; left: 25%; animation-delay: -8s; }
-.note-6 { top: 30%; right: 5%; animation-delay: -10s; font-size: 3rem; }
-
-@keyframes float {
-    0%, 100% {
-        transform: translateY(0) rotate(0deg);
-        opacity: 0.1;
-    }
-    50% {
-        transform: translateY(-30px) rotate(10deg);
-        opacity: 0.2;
-    }
 }
 
 /* ヘッダー */
 .header {
-    padding: var(--spacing-md) var(--spacing-lg);
+    padding: var(--spacing-lg) var(--spacing-lg);
     text-align: center;
     position: relative;
     z-index: 10;
@@ -133,32 +100,22 @@ body {
     display: inline-flex;
     align-items: center;
     gap: var(--spacing-sm);
-    font-size: 1.2rem;
+    font-size: 1.5rem;
     font-weight: 700;
-    background: var(--primary-gradient);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: var(--primary-color);
 }
 
 .logo-icon {
-    font-size: 1.4rem;
-    -webkit-text-fill-color: initial;
-    animation: pulse 2s infinite ease-in-out;
-}
-
-@keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.1); }
+    font-size: 1.6rem;
 }
 
 /* メインコンテンツ */
 .main-content {
     flex: 1;
     display: flex;
-    align-items: flex-start;
+    align-items: flex-start; /* 上寄せ */
     justify-content: center;
-    padding: var(--spacing-lg);
+    padding: var(--spacing-xl) var(--spacing-lg);
     position: relative;
     z-index: 10;
 }
@@ -168,8 +125,8 @@ body {
     display: none;
     width: 100%;
     max-width: 600px;
-    margin: auto 0;
-    animation: fadeIn 0.5s ease;
+    margin: 0 auto;
+    animation: fadeIn 0.4s ease;
 }
 
 .screen.active {
@@ -179,7 +136,7 @@ body {
 @keyframes fadeIn {
     from {
         opacity: 0;
-        transform: translateY(20px);
+        transform: translateY(10px);
     }
     to {
         opacity: 1;
@@ -187,15 +144,13 @@ body {
     }
 }
 
-/* グラスカード */
+/* カードコンテナ（旧グラスカード） */
 .glass-card {
-    background: var(--glass-bg);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid var(--glass-border);
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
     border-radius: var(--radius-xl);
     padding: var(--spacing-2xl);
-    box-shadow: var(--shadow-lg);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 /* ========== スタート画面 ========== */
@@ -204,18 +159,16 @@ body {
 }
 
 .screen-title {
-    font-size: 1.8rem;
+    font-size: 2rem;
     font-weight: 700;
     margin-bottom: var(--spacing-sm);
-    background: var(--primary-gradient);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: var(--text-primary);
 }
 
 .screen-description {
-    color: var(--text-secondary);
+    color: var(--text-muted);
     margin-bottom: var(--spacing-xl);
+    font-size: 0.95rem;
 }
 
 .selection-group {
@@ -235,47 +188,51 @@ body {
 .instrument-selector {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: var(--spacing-md);
+    gap: var(--spacing-lg); /* ギャップを広げる */
 }
 
 .instrument-btn {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: var(--spacing-xs);
-    padding: var(--spacing-sm) var(--spacing-md);
-    background: rgba(255, 255, 255, 0.05);
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    border-radius: var(--radius-lg);
+    justify-content: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-lg);
+    background: var(--bg-dark);
+    border: 1px solid var(--card-border); /* 細いボーダー */
+    border-radius: var(--radius-md);
     cursor: pointer;
-    transition: all var(--transition-normal);
-    color: var(--text-primary);
+    transition: all var(--transition-fast);
+    color: var(--text-secondary);
 }
 
 .instrument-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--card-border);
+    color: var(--text-primary);
     transform: translateY(-2px);
 }
 
 .instrument-btn.active {
-    border-color: var(--piano-color);
-    background: rgba(102, 126, 234, 0.2);
-    box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+    border-color: var(--primary-color);
+    background: rgba(99, 102, 241, 0.1); /* Primary color alpha */
+    color: var(--primary-color);
+    box-shadow: 0 0 0 1px var(--primary-color);
 }
 
 .instrument-btn[data-instrument="guitar"].active {
-    border-color: var(--guitar-color);
-    background: rgba(245, 87, 108, 0.2);
-    box-shadow: 0 0 20px rgba(245, 87, 108, 0.3);
+    border-color: var(--secondary-color);
+    background: rgba(236, 72, 153, 0.1); /* Secondary color alpha */
+    color: var(--secondary-color);
+    box-shadow: 0 0 0 1px var(--secondary-color);
 }
 
 .instrument-icon {
-    font-size: 1.8rem;
+    font-size: 2rem;
 }
 
 .instrument-name {
     font-weight: 600;
-    font-size: 1.1rem;
+    font-size: 1rem;
 }
 
 /* 難易度選択ボタン */
@@ -291,27 +248,30 @@ body {
     align-items: center;
     gap: var(--spacing-md);
     padding: var(--spacing-md) var(--spacing-lg);
-    background: rgba(255, 255, 255, 0.05);
-    border: 2px solid rgba(255, 255, 255, 0.1);
+    background: var(--bg-dark);
+    border: 1px solid var(--card-border);
     border-radius: var(--radius-md);
     cursor: pointer;
-    transition: all var(--transition-normal);
+    transition: all var(--transition-fast);
     text-align: left;
-    color: var(--text-primary);
+    color: var(--text-secondary);
 }
 
 .difficulty-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--card-border);
+    color: var(--text-primary);
 }
 
 .difficulty-btn.active {
-    border-color: var(--piano-color);
-    background: rgba(102, 126, 234, 0.15);
+    border-color: var(--primary-color);
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--primary-color);
 }
 
 .difficulty-stars {
     font-size: 1rem;
     min-width: 60px;
+    letter-spacing: 2px;
 }
 
 .difficulty-name {
@@ -335,24 +295,25 @@ body {
     flex-direction: column;
     align-items: center;
     gap: var(--spacing-xs);
-    padding: var(--spacing-sm);
-    background: rgba(255, 255, 255, 0.05);
-    border: 2px solid rgba(255, 255, 255, 0.1);
+    padding: var(--spacing-md);
+    background: var(--bg-dark);
+    border: 1px solid var(--card-border);
     border-radius: var(--radius-md);
     cursor: pointer;
-    transition: all var(--transition-normal);
-    color: var(--text-primary);
+    transition: all var(--transition-fast);
+    color: var(--text-secondary);
 }
 
 .mode-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--card-border);
+    color: var(--text-primary);
     transform: translateY(-2px);
 }
 
 .mode-btn.active {
     border-color: var(--accent-color);
-    background: linear-gradient(135deg, rgba(245, 87, 108, 0.15) 0%, rgba(240, 147, 251, 0.15) 100%);
-    box-shadow: 0 4px 20px rgba(245, 87, 108, 0.2);
+    background: rgba(139, 92, 246, 0.1);
+    color: var(--accent-color);
 }
 
 .mode-icon {
@@ -361,7 +322,7 @@ body {
 
 .mode-name {
     font-weight: 600;
-    font-size: 1rem;
+    font-size: 0.95rem;
 }
 
 .mode-desc {
@@ -370,7 +331,7 @@ body {
 }
 
 .mode-btn.active .mode-icon {
-    animation: bounce 1s ease-in-out infinite;
+    /* アニメーションなし */
 }
 
 /* スタートボタン */
@@ -380,25 +341,27 @@ body {
     justify-content: center;
     gap: var(--spacing-md);
     padding: var(--spacing-lg) var(--spacing-2xl);
-    background: var(--primary-gradient);
+    background: var(--primary-color);
     border: none;
     border-radius: var(--radius-full);
     color: white;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all var(--transition-normal);
-    box-shadow: var(--shadow-glow);
-    margin-top: var(--spacing-lg);
+    transition: all var(--transition-fast);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    margin-top: var(--spacing-xl);
+    width: 100%; /* 幅いっぱいに */
 }
 
 .start-btn:hover {
-    transform: translateY(-3px) scale(1.02);
-    box-shadow: 0 0 60px rgba(102, 126, 234, 0.5);
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 .start-btn:active {
-    transform: translateY(0) scale(0.98);
+    transform: translateY(0);
 }
 
 .btn-icon {
@@ -432,13 +395,14 @@ body {
 }
 
 .score-value {
-    font-size: 1.5rem;
+    font-size: 1.8rem;
     font-weight: 700;
     font-family: 'Outfit', sans-serif;
+    color: var(--text-primary);
 }
 
 .score-value.streak {
-    color: #38ef7d;
+    color: var(--success-color);
 }
 
 .game-card {
@@ -453,12 +417,7 @@ body {
 .instrument-emoji {
     font-size: 4rem;
     display: inline-block;
-    animation: bounce 2s infinite ease-in-out;
-}
-
-@keyframes bounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
+    /* アニメーションなし */
 }
 
 /* 再生セクション */
@@ -472,22 +431,23 @@ body {
     align-items: center;
     gap: var(--spacing-sm);
     padding: var(--spacing-xl) var(--spacing-2xl);
-    background: var(--primary-gradient);
+    background: var(--primary-color);
     border: none;
     border-radius: var(--radius-xl);
     color: white;
     cursor: pointer;
-    transition: all var(--transition-normal);
-    box-shadow: var(--shadow-glow);
+    transition: all var(--transition-fast);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 .play-btn:hover {
-    transform: scale(1.05);
-    box-shadow: 0 0 60px rgba(102, 126, 234, 0.5);
+    background: var(--primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 .play-btn:active {
-    transform: scale(0.95);
+    transform: translateY(0);
 }
 
 .play-btn.playing {
@@ -495,8 +455,8 @@ body {
 }
 
 @keyframes pulse-glow {
-    0%, 100% { box-shadow: 0 0 20px rgba(102, 126, 234, 0.5); }
-    50% { box-shadow: 0 0 60px rgba(102, 126, 234, 0.8); }
+    0%, 100% { box-shadow: 0 0 0 0px rgba(99, 102, 241, 0.7); }
+    100% { box-shadow: 0 0 0 15px rgba(99, 102, 241, 0); }
 }
 
 .play-icon {
@@ -510,7 +470,7 @@ body {
 
 .hint-text {
     margin-top: var(--spacing-md);
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     color: var(--text-muted);
 }
 
@@ -521,7 +481,7 @@ body {
 
 .answer-label {
     font-size: 1.1rem;
-    font-weight: 500;
+    font-weight: 600;
     margin-bottom: var(--spacing-lg);
     color: var(--text-secondary);
 }
@@ -534,8 +494,8 @@ body {
 
 .answer-btn {
     padding: var(--spacing-md);
-    background: rgba(255, 255, 255, 0.08);
-    border: 2px solid rgba(255, 255, 255, 0.15);
+    background: var(--bg-dark);
+    border: 1px solid var(--card-border);
     border-radius: var(--radius-md);
     color: var(--text-primary);
     font-size: 1.1rem;
@@ -545,9 +505,8 @@ body {
 }
 
 .answer-btn:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.15);
-    border-color: var(--piano-color);
-    transform: translateY(-2px);
+    background: var(--card-border);
+    border-color: var(--primary-color);
 }
 
 .answer-btn:active:not(:disabled) {
@@ -560,21 +519,23 @@ body {
 }
 
 .answer-btn.selected {
-    background: rgba(102, 126, 234, 0.5); /* 選択中の色 */
-    border-color: var(--piano-color);
-    box-shadow: 0 0 10px rgba(102, 126, 234, 0.4);
+    background: rgba(99, 102, 241, 0.2);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
 }
 
 .answer-btn.correct {
-    background: var(--success-gradient);
+    background: var(--success-color);
     border-color: transparent;
-    animation: correct-pulse 0.5s ease;
+    color: white;
+    animation: correct-pulse 0.4s ease;
 }
 
 .answer-btn.wrong {
-    background: var(--error-gradient);
+    background: var(--error-color);
     border-color: transparent;
-    animation: wrong-shake 0.5s ease;
+    color: white;
+    animation: wrong-shake 0.4s ease;
 }
 
 @keyframes correct-pulse {
@@ -655,17 +616,17 @@ body {
     align-items: center;
     gap: var(--spacing-sm);
     padding: var(--spacing-md) var(--spacing-lg);
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: var(--bg-dark);
+    border: 1px solid var(--card-border);
     border-radius: var(--radius-full);
     color: var(--text-secondary);
     font-size: 0.9rem;
     cursor: pointer;
-    transition: all var(--transition-normal);
+    transition: all var(--transition-fast);
 }
 
 .control-btn:hover {
-    background: rgba(255, 255, 255, 0.15);
+    background: var(--card-border);
     color: var(--text-primary);
 }
 
@@ -682,22 +643,13 @@ body {
     font-size: 4rem;
     display: block;
     margin-bottom: var(--spacing-md);
-    animation: celebrate 1s ease;
-}
-
-@keyframes celebrate {
-    0% { transform: scale(0) rotate(-180deg); }
-    50% { transform: scale(1.2) rotate(10deg); }
-    100% { transform: scale(1) rotate(0deg); }
+    /* アニメーションなし */
 }
 
 .result-title {
     font-size: 2rem;
     font-weight: 700;
-    background: var(--primary-gradient);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: var(--text-primary);
 }
 
 /* 結果統計 */
@@ -713,7 +665,7 @@ body {
     flex-direction: column;
     gap: var(--spacing-xs);
     padding: var(--spacing-lg);
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--bg-dark);
     border-radius: var(--radius-md);
 }
 
@@ -721,10 +673,7 @@ body {
     font-size: 2rem;
     font-weight: 700;
     font-family: 'Outfit', sans-serif;
-    background: var(--primary-gradient);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: var(--primary-color);
 }
 
 .stat-label {
@@ -738,7 +687,7 @@ body {
 .result-rank {
     margin-bottom: var(--spacing-xl);
     padding: var(--spacing-lg);
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--bg-dark);
     border-radius: var(--radius-lg);
 }
 
@@ -752,6 +701,7 @@ body {
 .rank-badge {
     font-size: 1.5rem;
     font-weight: 700;
+    color: var(--text-primary);
 }
 
 /* 結果アクション */
@@ -772,28 +722,29 @@ body {
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all var(--transition-normal);
+    transition: all var(--transition-fast);
 }
 
 .retry-btn {
-    background: var(--primary-gradient);
+    background: var(--primary-color);
     color: white;
-    box-shadow: var(--shadow-glow);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .retry-btn:hover {
+    background: var(--primary-hover);
     transform: translateY(-2px);
-    box-shadow: 0 0 40px rgba(102, 126, 234, 0.5);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
 
 .menu-btn {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--bg-dark);
     color: var(--text-primary);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid var(--card-border);
 }
 
 .menu-btn:hover {
-    background: rgba(255, 255, 255, 0.15);
+    background: var(--card-border);
 }
 
 /* フッター */
@@ -1225,10 +1176,7 @@ body {
 .chord-name {
     font-size: 3rem;
     font-weight: 700;
-    background: var(--primary-gradient);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: var(--primary-color);
     animation: chord-pulse 0.5s ease;
 }
 
@@ -1519,10 +1467,7 @@ body {
 .pattern-name {
     font-size: 2rem;
     font-weight: 700;
-    background: linear-gradient(135deg, #ff6b6b 0%, #feca57 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: var(--secondary-color);
 }
 
 .drum-bpm {
