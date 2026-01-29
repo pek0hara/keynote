@@ -79,6 +79,25 @@
                                 <span class="mode-name">コードモード</span>
                                 <span class="mode-desc">和音を当てる</span>
                             </button>
+                            <button class="mode-btn hidden" data-mode="challenge" id="btn-challenge">
+                                <span class="mode-icon">🎯</span>
+                                <span class="mode-name">チャレンジ</span>
+                                <span class="mode-desc">既定の曲数</span>
+                            </button>
+                            <button class="mode-btn hidden" data-mode="unlimited" id="btn-unlimited">
+                                <span class="mode-icon">♾️</span>
+                                <span class="mode-name">エンドレス</span>
+                                <span class="mode-desc">BPM設定・無制限</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- BPM設定（エンドレスモード用） -->
+                    <div class="selection-group custom-settings hidden" id="bpm-settings">
+                        <h3 class="selection-label">BPM設定</h3>
+                        <div class="bpm-control-group">
+                            <input type="range" id="bpm-slider" min="40" max="240" step="1" value="100" class="bpm-slider">
+                            <input type="number" id="bpm-input" min="40" max="240" value="100" class="bpm-input">
                         </div>
                     </div>
 
