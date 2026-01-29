@@ -1008,23 +1008,47 @@ class Game {
         const currentBeat = this.drumBeatCount;
 
         // レーンの幅（判定ライン位置を考慮）
-        const laneWidth = rhythmLane.offsetWidth;
-        const judgmentLinePos = 60; // 判定ラインの位置（px）
-        const noteWidth = 30;
         const visibleBeats = 8; // 表示するビート数
+
+        // 判定ラインとレーンの位置関係を取得（動的に計算）
+        const judgmentLine = rhythmLane.querySelector('.drum-judgment-line');
+        const lanes = rhythmLane.querySelectorAll('.drum-lane');
+
+        // 要素が正しく取得できない場合は処理中断
+        if (!judgmentLine || lanes.length === 0) return;
+
+        const firstLane = lanes[0];
+
+        // 判定ラインの相対位置（レーン内でのX座標）を計算
+        // 親要素のパディングなどを考慮するため、offsetLeftの差分を使用
+        const judgmentLineX = judgmentLine.offsetLeft;
+        const laneStartX = firstLane.offsetLeft;
+        const effectiveJudgmentPos = judgmentLineX - laneStartX;
+
+        const laneWidth = firstLane.offsetWidth;
 
         // 全ノートの位置を更新
         const notes = rhythmLane.querySelectorAll('.drum-note');
         notes.forEach(note => {
             const noteBeat = parseInt(note.dataset.beat);
             const noteIndex = parseInt(note.dataset.index);
+            const noteWidth = note.offsetWidth || 30; // 実際の幅を使用（取得できなければデフォルト30px）
 
             // 現在のビートからの相対位置を計算
             const beatDiff = noteBeat - currentBeat;
 
-            // ノートの位置を計算（判定ラインを基準に右に流れていく）
+            // ノートの位置を計算
+            // 目標位置（hit時）: ノートの中心が判定ラインと重なる位置
+            const targetLeft = effectiveJudgmentPos - (noteWidth / 2);
+
+            // 開始位置（右側）: レーンの右端から出現
+            const startLeft = laneWidth - noteWidth;
+
+            const totalDistance = startLeft - targetLeft;
             const positionRatio = beatDiff / visibleBeats;
-            const leftPos = judgmentLinePos + (laneWidth - judgmentLinePos - noteWidth) * positionRatio;
+
+            // 位置を補間計算
+            const leftPos = targetLeft + totalDistance * positionRatio;
 
             note.style.left = `${leftPos}px`;
 
@@ -1266,13 +1290,25 @@ class Game {
         const rhythmLane = document.getElementById('drum-rhythm-lane');
         if (!rhythmLane) return;
 
-        const judgmentLinePos = 60; // 判定ラインの位置
+        // 判定ラインの位置を動的に取得
+        const judgmentLine = rhythmLane.querySelector('.drum-judgment-line');
+        const lane = rhythmLane.querySelector('.drum-lane');
+        if (!judgmentLine || !lane) return;
+
+        // レーン内での判定ライン位置
+        const effectiveJudgmentPos = judgmentLine.offsetLeft - lane.offsetLeft;
 
         const marker = document.createElement('div');
         marker.className = `drum-input-marker ${isCorrect ? 'correct' : 'wrong'}`;
-        marker.style.left = `${judgmentLinePos - 12}px`; // マーカーを判定ライン上に配置
 
+        // マーカーを追加してから幅を取得（またはCSSの変数を参照）
+        // 追加前はoffsetWidthが0になる可能性があるため、一度追加してから位置調整する、あるいは推測する
+        // ここではCSS依存を減らすため、追加後に位置を設定
         laneNotes.appendChild(marker);
+
+        const markerWidth = marker.offsetWidth || 24;
+        // マーカーの中心を判定ラインに合わせる
+        marker.style.left = `${effectiveJudgmentPos - markerWidth / 2}px`;
 
         // アニメーション後に削除
         setTimeout(() => marker.remove(), 500);
