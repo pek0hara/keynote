@@ -270,6 +270,12 @@ body {
     box-shadow: 0 0 20px rgba(245, 87, 108, 0.3);
 }
 
+.instrument-btn[data-instrument="maracas"].active {
+    border-color: #feca57;
+    background: rgba(254, 202, 87, 0.2);
+    box-shadow: 0 0 20px rgba(254, 202, 87, 0.3);
+}
+
 .instrument-icon {
     font-size: 1.8rem;
 }
@@ -2188,4 +2194,170 @@ input:checked + .toggle-slider:before {
     .lane-label {
         font-size: 0.6rem;
     }
+}
+
+/* ========== マラカスモードUI ========== */
+.maracas-mode-ui {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-lg);
+    width: 100%;
+    padding: var(--spacing-md);
+}
+
+.maracas-mode-ui.hidden {
+    display: none;
+}
+
+.maracas-status-display {
+    display: flex;
+    gap: var(--spacing-lg);
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.bpm-display, .deviation-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--spacing-md);
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-md);
+    flex: 1;
+    min-width: 140px;
+}
+
+.bpm-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    font-family: 'Outfit', sans-serif;
+    color: #feca57;
+}
+
+.deviation-meter-container {
+    position: relative;
+    width: 100%;
+    height: 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    margin: 15px 0;
+    overflow: hidden;
+}
+
+.deviation-center-line {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: rgba(255, 255, 255, 0.5);
+    transform: translateX(-50%);
+    z-index: 1;
+}
+
+.deviation-indicator {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 8px; /* 少し太く */
+    height: 12px;
+    background: transparent;
+    border-radius: 2px;
+    left: 50%; /* 初期位置 */
+    transform: translateX(-50%);
+    transition: left 0.1s ease-out, background-color 0.1s;
+    z-index: 2;
+}
+
+.deviation-indicator.show {
+    box-shadow: 0 0 10px currentColor;
+}
+
+.deviation-value {
+    font-family: 'Outfit', monospace;
+    font-size: 1.5rem;
+    font-weight: 700;
+    height: 2rem;
+}
+
+.maracas-pad-container {
+    margin: var(--spacing-lg) 0;
+}
+
+.maracas-pad {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    border: 8px solid rgba(255, 255, 255, 0.1);
+    background: linear-gradient(135deg, #feca57 0%, #ff6b6b 100%);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    cursor: pointer;
+    box-shadow:
+        0 10px 30px rgba(255, 107, 107, 0.4),
+        inset 0 0 30px rgba(255, 255, 255, 0.3);
+    transition: all 0.05s;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    position: relative;
+    overflow: hidden;
+}
+
+.maracas-pad:active, .maracas-pad.active {
+    transform: scale(0.95);
+    box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+}
+
+/* シェイクアニメーション */
+.maracas-pad.shake {
+    animation: maracasShake 0.15s ease-in-out;
+}
+
+@keyframes maracasShake {
+    0% { transform: rotate(0deg) scale(0.95); }
+    25% { transform: rotate(-5deg) scale(0.95); }
+    75% { transform: rotate(5deg) scale(0.95); }
+    100% { transform: rotate(0deg) scale(0.95); }
+}
+
+.maracas-pad .pad-icon {
+    font-size: 4rem;
+    z-index: 2;
+}
+
+.maracas-pad .pad-text {
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    z-index: 2;
+}
+
+/* 波紋エフェクト */
+.maracas-pad::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(255,255,255,0.4) 0%, transparent 70%);
+    transform: translate(-50%, -50%) scale(0);
+    border-radius: 50%;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.maracas-pad:active::after, .maracas-pad.active::after {
+    animation: ripple 0.4s ease-out;
+}
+
+@keyframes ripple {
+    0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
 }

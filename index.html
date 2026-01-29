@@ -58,6 +58,10 @@
                                 <span class="instrument-icon">🥁</span>
                                 <span class="instrument-name">ドラム</span>
                             </button>
+                            <button class="instrument-btn" data-instrument="maracas" id="btn-maracas">
+                                <span class="instrument-icon">🪇</span>
+                                <span class="instrument-name">マラカス</span>
+                            </button>
                         </div>
                     </div>
 
@@ -403,6 +407,33 @@
                                     </button>
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- マラカスモードUI -->
+                        <div class="maracas-mode-ui hidden" id="maracas-mode-ui">
+                            <div class="maracas-status-display">
+                                <div class="bpm-display">
+                                    <span class="bpm-label">TARGET BPM</span>
+                                    <span class="bpm-value" id="maracas-target-bpm">100</span>
+                                </div>
+                                <div class="deviation-display">
+                                     <span class="deviation-label">タイミングのズレ</span>
+                                     <div class="deviation-meter-container">
+                                         <div class="deviation-center-line"></div>
+                                         <div class="deviation-indicator" id="deviation-indicator"></div>
+                                     </div>
+                                     <span class="deviation-value" id="maracas-deviation-value">READY</span>
+                                </div>
+                            </div>
+
+                            <div class="maracas-pad-container">
+                                <button class="maracas-pad" id="maracas-pad">
+                                    <span class="pad-icon">🪇</span>
+                                    <span class="pad-text">SHAKE!</span>
+                                </button>
+                            </div>
+
+                            <div class="maracas-feedback" id="maracas-feedback"></div>
                         </div>
                     </div>
 

@@ -50,6 +50,15 @@ class Game {
         this.drumPreviewPhase = false; // プレビューフェーズ中かどうか
         this.drumPreviewCount = 0; // プレビュー周回数（2周で終了）
 
+        // マラカスモード用
+        this.maracasBpm = 100;
+        this.maracasIsPlaying = false;
+        this.maracasLastBeatTime = 0;
+        this.maracasBeatCount = 0;
+        this.maracasDurationBeats = 32; // セッションの長さ
+        this.maracasStats = { count: 0, sumAbsDiff: 0 };
+        this.maracasModeUI = document.getElementById('maracas-mode-ui');
+
         this.init();
     }
     
@@ -68,6 +77,7 @@ class Game {
         this.bassFretboard = document.getElementById('bass-fretboard');
         this.drumModeUI = document.getElementById('drum-mode-ui');
         this.drumPads = document.getElementById('drum-pads');
+        this.maracasModeUI = document.getElementById('maracas-mode-ui');
 
         // ボタンイベント
         document.querySelectorAll('.instrument-btn').forEach(btn => {
@@ -99,8 +109,24 @@ class Game {
 
         // ドラムパッドイベント
         this.initDrumPads();
+
+        // マラカスパッドイベント
+        this.initMaracasPad();
     }
     
+    initMaracasPad() {
+        const pad = document.getElementById('maracas-pad');
+        if (!pad) return;
+
+        const handleInput = (e) => {
+            if (e.type === 'touchstart') e.preventDefault();
+            this.handleMaracasInput();
+        };
+
+        pad.addEventListener('touchstart', handleInput, { passive: false });
+        pad.addEventListener('mousedown', handleInput);
+    }
+
     initPianoKeyboard() {
         // 白鍵イベント
         document.querySelectorAll('.white-key').forEach(key => {
@@ -273,6 +299,10 @@ class Game {
             easyDesc.textContent = '8ビート・BPM80';
             mediumDesc.textContent = 'ロック・BPM100・フルパターン';
             hardDesc.textContent = 'ファンク・BPM120・フルパターン';
+        } else if (this.instrument === 'maracas') {
+            easyDesc.textContent = 'BPM 80・16拍';
+            mediumDesc.textContent = 'BPM 100・32拍';
+            hardDesc.textContent = 'BPM 120・48拍';
         } else if (this.instrument === 'bass') {
             easyDesc.textContent = '4コード・BPM80';
             mediumDesc.textContent = '6コード・BPM100';
@@ -313,9 +343,15 @@ class Game {
         this.drumIsPlaying = false;
         this.drumUserInputs = [];
 
+        // マラカスモードの初期化
+        this.maracasIsPlaying = false;
+
         if (this.instrument === 'drum') {
             // ドラム楽器選択時
             this.setupDrumMode();
+        } else if (this.instrument === 'maracas') {
+            // マラカス楽器選択時
+            this.setupMaracasMode();
         } else if (this.instrument === 'bass') {
             // ベース楽器選択時
             this.availableChords = audioEngine.getChordsByDifficulty(this.difficulty);
@@ -379,8 +415,23 @@ class Game {
         }
         this.drumPattern = audioEngine.getDrumPattern(this.drumPatternName);
     }
-    
 
+    setupMaracasMode() {
+        switch (this.difficulty) {
+            case 'easy':
+                this.maracasBpm = 80;
+                this.maracasDurationBeats = 16;
+                break;
+            case 'medium':
+                this.maracasBpm = 100;
+                this.maracasDurationBeats = 32;
+                break;
+            case 'hard':
+                this.maracasBpm = 120;
+                this.maracasDurationBeats = 48;
+                break;
+        }
+    }
     
     updateInstrumentVisual() {
         // ドラムヘッダー表示の切り替え関数
@@ -391,36 +442,26 @@ class Game {
             if (bpmItem) bpmItem.classList.toggle('hidden', !show);
         };
 
-        // ドラム楽器の場合
-        if (this.instrument === 'drum') {
-            this.pianoKeyboard.classList.add('hidden');
-            this.guitarFretboard.classList.add('hidden');
-            this.bassModeUI.classList.add('hidden');
-            this.drumModeUI.classList.remove('hidden');
-            toggleDrumHeader(true);
-            return;
-        }
-
-        toggleDrumHeader(false);
-
-        // ベース楽器の場合
-        if (this.instrument === 'bass') {
-            this.pianoKeyboard.classList.add('hidden');
-            this.guitarFretboard.classList.add('hidden');
-            this.drumModeUI.classList.add('hidden');
-            this.bassModeUI.classList.remove('hidden');
-            return;
-        }
-
-        // ピアノかギターかでビジュアルを切り替え
+        // UIを一旦すべて非表示
+        this.pianoKeyboard.classList.add('hidden');
+        this.guitarFretboard.classList.add('hidden');
         this.bassModeUI.classList.add('hidden');
         this.drumModeUI.classList.add('hidden');
-        if (this.instrument === 'piano') {
+        this.maracasModeUI.classList.add('hidden');
+        toggleDrumHeader(false);
+
+        if (this.instrument === 'drum') {
+            this.drumModeUI.classList.remove('hidden');
+            toggleDrumHeader(true);
+        } else if (this.instrument === 'maracas') {
+            this.maracasModeUI.classList.remove('hidden');
+        } else if (this.instrument === 'bass') {
+            this.bassModeUI.classList.remove('hidden');
+        } else if (this.instrument === 'piano') {
             this.pianoKeyboard.classList.remove('hidden');
-            this.guitarFretboard.classList.add('hidden');
             this.updateBlackKeysVisibility();
         } else {
-            this.pianoKeyboard.classList.add('hidden');
+            // guitar
             this.guitarFretboard.classList.remove('hidden');
         }
     }
@@ -445,14 +486,8 @@ class Game {
         const answerSection = document.querySelector('.answer-section');
         grid.innerHTML = '';
 
-        // ドラム楽器では回答ボタンを非表示
-        if (this.instrument === 'drum') {
-            answerSection.classList.add('hidden');
-            return;
-        }
-
-        // ベース楽器では回答ボタンを非表示
-        if (this.instrument === 'bass') {
+        // ドラム・ベース・マラカス楽器では回答ボタンを非表示
+        if (this.instrument === 'drum' || this.instrument === 'bass' || this.instrument === 'maracas') {
             answerSection.classList.add('hidden');
             return;
         }
@@ -497,6 +532,10 @@ class Game {
             if (this.instrument === 'drum') {
                 this.stopDrumMode();
             }
+            // マラカス楽器の場合は停止
+            if (this.instrument === 'maracas') {
+                this.stopMaracasMode();
+            }
             // ベース楽器の場合はメトロノームを停止
             if (this.instrument === 'bass') {
                 audioEngine.stopMetronome();
@@ -514,6 +553,16 @@ class Game {
             document.getElementById('current-streak').textContent = this.streak;
             document.getElementById('question-number').textContent = `${this.questionNumber}/${this.totalQuestions}`;
             document.getElementById('hint-text').textContent = 'スタートを押してリズムに合わせてドラムを叩こう！';
+            return;
+        }
+
+        // マラカス楽器の場合
+        if (this.instrument === 'maracas') {
+            this.setupMaracasQuestion();
+            document.getElementById('current-score').textContent = this.score;
+            document.getElementById('current-streak').textContent = this.streak;
+            document.getElementById('question-number').textContent = `${this.questionNumber}/${this.totalQuestions}`;
+            document.getElementById('hint-text').textContent = 'スタートを押してBPMに合わせて振ろう！';
             return;
         }
 
@@ -608,6 +657,8 @@ class Game {
     playCurrentSound() {
         if (this.instrument === 'drum') {
             this.startDrumMode();
+        } else if (this.instrument === 'maracas') {
+            this.startMaracasMode();
         } else if (this.instrument === 'bass') {
             this.startBassMode();
         } else if (this.gameMode === 'chord') {
@@ -1480,6 +1531,177 @@ class Game {
         setTimeout(() => this.nextQuestion(), 2000);
     }
 
+    // ========== マラカスモード関連 ==========
+
+    setupMaracasQuestion() {
+        this.maracasStats = { count: 0, sumAbsDiff: 0, maxDiff: 0, correctCount: 0 };
+        document.getElementById('maracas-target-bpm').textContent = this.maracasBpm;
+        document.getElementById('maracas-deviation-value').textContent = 'READY';
+
+        // メーターリセット
+        const indicator = document.getElementById('deviation-indicator');
+        if (indicator) {
+            indicator.style.left = '50%';
+            indicator.style.backgroundColor = 'transparent';
+        }
+    }
+
+    startMaracasMode() {
+        if (this.maracasIsPlaying) {
+            this.stopMaracasMode();
+            return;
+        }
+
+        this.hasPlayed = true;
+        this.maracasIsPlaying = true;
+        this.maracasBeatCount = 0;
+        this.maracasStats = { count: 0, sumAbsDiff: 0, maxDiff: 0, correctCount: 0 };
+
+        const playBtn = document.getElementById('play-sound-btn');
+        playBtn.classList.add('playing');
+        playBtn.querySelector('.play-text').textContent = '停止';
+
+        document.getElementById('hint-text').textContent = 'ビートに合わせてシェイク！';
+        document.getElementById('maracas-deviation-value').textContent = 'GO!';
+
+        // メトロノーム開始 (4分音符)
+        audioEngine.startMetronome(this.maracasBpm, (beatCount, isAccent) => {
+            this.onMaracasBeat(beatCount);
+        }, 1);
+    }
+
+    stopMaracasMode() {
+        audioEngine.stopMetronome();
+        this.maracasIsPlaying = false;
+
+        const playBtn = document.getElementById('play-sound-btn');
+        playBtn.classList.remove('playing');
+        playBtn.querySelector('.play-text').textContent = '音を聴く';
+    }
+
+    onMaracasBeat(beatCount) {
+        this.maracasLastBeatTime = Date.now();
+        this.maracasBeatCount = beatCount;
+
+        // セッション終了チェック
+        if (beatCount >= this.maracasDurationBeats) {
+            this.stopMaracasMode();
+            this.evaluateMaracasPerformance();
+        }
+    }
+
+    handleMaracasInput() {
+        // 音とアニメーション
+        audioEngine.playMaracas();
+        const pad = document.getElementById('maracas-pad');
+        if (pad) {
+            pad.classList.remove('shake');
+            void pad.offsetWidth;
+            pad.classList.add('shake');
+        }
+
+        if (!this.maracasIsPlaying) return;
+
+        const now = Date.now();
+        const interval = 60000 / this.maracasBpm;
+
+        // 直近のビートからのズレを計算
+        // maracasLastBeatTimeは「最後に鳴ったクリック」の時間
+        // 次のクリックまでの時間は interval
+        // 経過時間
+        const elapsedSinceLast = now - this.maracasLastBeatTime;
+
+        let diff;
+        // 半分以上過ぎていれば「次のビートに対して早い」とみなす
+        if (elapsedSinceLast > interval / 2) {
+            diff = elapsedSinceLast - interval; // マイナス値（早い）
+        } else {
+            diff = elapsedSinceLast; // プラス値（遅い）
+        }
+
+        // 記録と表示
+        this.maracasStats.count++;
+        this.maracasStats.sumAbsDiff += Math.abs(diff);
+        this.maracasStats.maxDiff = Math.max(this.maracasStats.maxDiff, Math.abs(diff));
+
+        // 許容範囲判定 (±50ms Great, ±100ms Good)
+        if (Math.abs(diff) <= 100) {
+            this.maracasStats.correctCount++;
+        }
+
+        this.showMaracasFeedback(diff);
+    }
+
+    showMaracasFeedback(diff) {
+        const valEl = document.getElementById('maracas-deviation-value');
+        const indicator = document.getElementById('deviation-indicator');
+
+        // 表示更新
+        const sign = diff > 0 ? '+' : '';
+        valEl.textContent = `${sign}${Math.round(diff)} ms`;
+
+        // 色分け
+        let color = '#f45c43'; // Bad
+        if (Math.abs(diff) <= 30) color = '#38ef7d'; // Perfect
+        else if (Math.abs(diff) <= 80) color = '#feca57'; // Good
+
+        valEl.style.color = color;
+
+        // メーター移動
+        // 範囲 ±150ms を ±50% にマッピング
+        // diff=0 -> 50%
+        // diff=-150 -> 0%
+        // diff=+150 -> 100%
+        let percent = 50 + (diff / 300) * 100;
+        percent = Math.max(0, Math.min(100, percent));
+
+        if (indicator) {
+            indicator.style.left = `${percent}%`;
+            indicator.style.backgroundColor = color;
+            indicator.classList.remove('show');
+            void indicator.offsetWidth;
+            indicator.classList.add('show');
+        }
+    }
+
+    evaluateMaracasPerformance() {
+        const totalBeats = this.maracasDurationBeats;
+        // スコア計算: 平均ズレが小さいほど高得点
+        const avgDiff = this.maracasStats.count > 0 ? this.maracasStats.sumAbsDiff / this.maracasStats.count : 1000;
+
+        // 正解率判定（入力数不足は減点対象とすべきだが、簡易的に精度で判定）
+        // ただし、極端に少ない入力で高精度を防ぐため、拍数の80%以上は叩いていること
+        const inputCoverage = (this.maracasStats.count / totalBeats) * 100;
+
+        let isSuccess = false;
+        if (inputCoverage >= 80 && avgDiff <= 80) {
+            isSuccess = true;
+        }
+
+        const baseScore = isSuccess ? 1000 : 0;
+        // 精度ボーナス: 誤差0msで1000点、100msで0点
+        const accuracyScore = Math.max(0, 100 - avgDiff) * 10;
+
+        const roundScore = Math.round(baseScore + accuracyScore);
+
+        if (isSuccess) {
+            this.correctCount++;
+            this.streak++;
+            this.maxStreak = Math.max(this.maxStreak, this.streak);
+            this.score += roundScore;
+            this.showFeedback(true, null);
+        } else {
+            this.streak = 0;
+            this.score += Math.floor(roundScore * 0.3);
+            this.showFeedback(false, `平均ズレ: ${Math.round(avgDiff)}ms`);
+        }
+
+        document.getElementById('current-score').textContent = this.score;
+        document.getElementById('current-streak').textContent = this.streak;
+
+        setTimeout(() => this.nextQuestion(), 3000);
+    }
+
     checkAnswer(selected) {
         if (!this.hasPlayed) {
             document.getElementById('hint-text').textContent = '⚠️ まず音を聴いてください！';
@@ -1684,6 +1906,11 @@ class Game {
         // ドラムモードの場合はパターン再生を停止
         if (this.drumIsPlaying) {
             this.stopDrumMode();
+        }
+
+        // マラカスモードの場合は停止
+        if (this.maracasIsPlaying) {
+            this.stopMaracasMode();
         }
 
         // ベースモードの場合はメトロノームを停止
