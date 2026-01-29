@@ -424,6 +424,10 @@ body {
     gap: var(--spacing-xs);
 }
 
+.score-item.hidden {
+    display: none;
+}
+
 .score-label {
     font-size: 0.75rem;
     color: var(--text-muted);
@@ -439,6 +443,15 @@ body {
 
 .score-value.streak {
     color: #38ef7d;
+}
+
+.pattern-value {
+    font-size: 1.2rem;
+    background: linear-gradient(135deg, #ff6b6b 0%, #feca57 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 700;
 }
 
 .game-card {

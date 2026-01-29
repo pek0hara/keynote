@@ -373,14 +373,25 @@ class Game {
 
     
     updateInstrumentVisual() {
+        // ドラムヘッダー表示の切り替え関数
+        const toggleDrumHeader = (show) => {
+            const patternItem = document.getElementById('pattern-display-item');
+            const bpmItem = document.getElementById('bpm-display-item');
+            if (patternItem) patternItem.classList.toggle('hidden', !show);
+            if (bpmItem) bpmItem.classList.toggle('hidden', !show);
+        };
+
         // ドラム楽器の場合
         if (this.instrument === 'drum') {
             this.pianoKeyboard.classList.add('hidden');
             this.guitarFretboard.classList.add('hidden');
             this.bassModeUI.classList.add('hidden');
             this.drumModeUI.classList.remove('hidden');
+            toggleDrumHeader(true);
             return;
         }
+
+        toggleDrumHeader(false);
 
         // ベース楽器の場合
         if (this.instrument === 'bass') {
@@ -986,7 +997,7 @@ class Game {
         // BPM表示
         const bpmEl = document.getElementById('drum-bpm-display');
         if (bpmEl) {
-            bpmEl.textContent = `BPM: ${this.drumBpm}`;
+            bpmEl.textContent = this.drumBpm;
         }
 
         // リズムレーンのノート位置を更新
