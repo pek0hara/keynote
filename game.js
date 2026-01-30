@@ -159,6 +159,9 @@ class Game {
 
         // マラカスパッドイベント
         this.initMaracasPad();
+
+        // 初期表示のために楽器選択を実行
+        this.selectInstrument(this.instrument);
     }
     
     initMaracasPad() {
@@ -383,8 +386,12 @@ class Game {
         const challengeBtn = document.getElementById('btn-challenge');
         const unlimitedBtn = document.getElementById('btn-unlimited');
 
+        // モード選択グループ全体（タイトル含む）
+        const modeGroup = document.querySelector('.mode-selector')?.parentElement;
+
         if (instrument === 'maracas') {
-            // マラカスの場合：チャレンジ/エンドレスを表示、単音/コードを非表示
+            // マラカスの場合：チャレンジ/エンドレスを表示
+            if(modeGroup) modeGroup.classList.remove('hidden');
             if(singleBtn) singleBtn.classList.add('hidden');
             if(chordBtn) chordBtn.classList.add('hidden');
             if(challengeBtn) challengeBtn.classList.remove('hidden');
@@ -398,9 +405,13 @@ class Game {
                 this.selectMode(this.gameMode);
             }
         } else {
-            // その他の楽器：単音/コードを表示、チャレンジ/エンドレスを非表示
-            if(singleBtn) singleBtn.classList.remove('hidden');
-            if(chordBtn) chordBtn.classList.remove('hidden');
+            // その他の楽器：チャレンジ/エンドレスを非表示
+            // 音当てモード統一のため、単音/コードボタンも非表示にする
+            // 結果として全てのボタンが消えるため、グループごと非表示にする
+            if(modeGroup) modeGroup.classList.add('hidden');
+
+            if(singleBtn) singleBtn.classList.add('hidden');
+            if(chordBtn) chordBtn.classList.add('hidden');
             if(challengeBtn) challengeBtn.classList.add('hidden');
             if(unlimitedBtn) unlimitedBtn.classList.add('hidden');
 
@@ -459,23 +470,15 @@ class Game {
                 hardDesc.textContent = 'BPM 120・48拍';
             }
         } else if (this.instrument === 'bass') {
-            if (this.gameMode === 'single') {
-                easyDesc.textContent = 'E1 - G2';
-                mediumDesc.textContent = 'E1 - C3';
-                hardDesc.textContent = '全音域';
-            } else {
-                easyDesc.textContent = '4コード・BPM80';
-                mediumDesc.textContent = '6コード・BPM100';
-                hardDesc.textContent = '8コード・BPM120';
-            }
-        } else if (this.gameMode === 'chord') {
-            easyDesc.textContent = 'メジャーコード';
-            mediumDesc.textContent = '+マイナー';
-            hardDesc.textContent = '+セブンス';
+            // ベースは常に単音モード
+            easyDesc.textContent = '単音 (E1 - G2)';
+            mediumDesc.textContent = '単音 (E1 - C3)';
+            hardDesc.textContent = '単音 (全音域)';
         } else {
-            easyDesc.textContent = 'C D E F G A B';
-            mediumDesc.textContent = '2オクターブ';
-            hardDesc.textContent = '+シャープ';
+            // ピアノ・ギター（上級はコードモード）
+            easyDesc.textContent = '単音 (ド〜ソ)';
+            mediumDesc.textContent = '単音 (2オクターブ)';
+            hardDesc.textContent = 'コード (和音当て)';
         }
     }
     
@@ -495,6 +498,19 @@ class Game {
         this.questionNumber = 0;
         this.correctCount = 0;
         this.sequenceLength = 3; // シーケンス長を3にリセット
+        this.totalQuestions = 5; // 全5問に変更
+
+        // モードの自動設定（難易度連動）
+        if (this.instrument === 'piano' || this.instrument === 'guitar') {
+            if (this.difficulty === 'hard') {
+                this.gameMode = 'chord';
+            } else {
+                this.gameMode = 'single';
+            }
+        } else if (this.instrument === 'bass') {
+            // ベースは音当て（単音）モードのみ
+            this.gameMode = 'single';
+        }
 
         // ベースモードの初期化
         this.bassIsPlaying = false;
@@ -784,19 +800,55 @@ class Game {
             return;
         }
 
+        // 進行度に応じた難易度調整（プール制限）
+        let currentPool;
+        if (this.gameMode === 'chord') {
+            // コードモード
+            currentPool = [...this.availableChords];
+            if (this.questionNumber <= 3) {
+                // 1-3問目: メジャーコードのみに制限
+                currentPool = currentPool.filter(c => !c.includes('m') && !c.includes('7'));
+            }
+            // 4-5問目はフルセット（マイナー・7th含む）
+        } else {
+            // 単音モード
+            currentPool = [...this.availableNotes];
+            if (this.questionNumber <= 3) {
+                // 1-3問目: 範囲を制限
+                if (this.difficulty === 'easy') {
+                    // 初級前半: ド〜ソ (C4-G4)
+                    const easySubset = ['C4', 'D4', 'E4', 'F4', 'G4'];
+                    currentPool = currentPool.filter(n => easySubset.includes(n));
+                } else if (this.difficulty === 'medium') {
+                    // 中級前半: 1オクターブ (C4-C5)
+                    // availableNotesはC3-C5なので、C4以上のみ残す
+                    currentPool = currentPool.filter(n => {
+                        const octave = parseInt(n.slice(-1));
+                        return octave >= 4;
+                    });
+                }
+            }
+            // 4-5問目はフルセット
+        }
+
+        // プールが空にならないようにガード（念のため）
+        if (currentPool.length === 0) {
+            currentPool = this.gameMode === 'chord' ? this.availableChords : this.availableNotes;
+        }
+
         if (this.gameMode === 'chord') {
             // コードモード：連続コードのシーケンス生成
             this.currentChordsSequence = [];
 
             // ルートコードをランダムに選択（シーケンスの最初に入れる）
-            const rootIndex = Math.floor(Math.random() * this.availableChords.length);
-            this.rootChord = this.availableChords[rootIndex];
+            const rootIndex = Math.floor(Math.random() * currentPool.length);
+            this.rootChord = currentPool[rootIndex];
             this.currentChordsSequence.push(this.rootChord);
 
             // 残りのコードを生成
             for (let i = 1; i < this.sequenceLength; i++) {
-                const randomIndex = Math.floor(Math.random() * this.availableChords.length);
-                this.currentChordsSequence.push(this.availableChords[randomIndex]);
+                const randomIndex = Math.floor(Math.random() * currentPool.length);
+                this.currentChordsSequence.push(currentPool[randomIndex]);
             }
 
             // 後方互換性のため、最初のコードをcurrentChordにも設定
@@ -806,19 +858,23 @@ class Game {
             this.currentNotesSequence = [];
             
             // 1音目はランダムに選択
-            const firstIndex = Math.floor(Math.random() * this.availableNotes.length);
-            const firstNote = this.availableNotes[firstIndex];
+            const firstIndex = Math.floor(Math.random() * currentPool.length);
+            const firstNote = currentPool[firstIndex];
             this.currentNotesSequence.push(firstNote);
             
             // 2音目以降は、1音目をルートとしたメジャースケール上の音から選択
             if (this.sequenceLength > 1) {
-                // 1音目をルートとするスケール音を取得
-                const scaleNotes = audioEngine.getMajorScaleNotes(firstNote, this.availableNotes);
+                // 1音目をルートとするスケール音を取得（プールに関わらず、音楽的に正しいスケール音から選ぶか、プール内に制限するか？）
+                // ここではプール内（難易度制限内）から選ぶのが適切
+                const scaleNotes = audioEngine.getMajorScaleNotes(firstNote, currentPool);
                 
+                // スケール音がプール内にない場合（稀なケース）、プール全体から選ぶ
+                const candidates = scaleNotes.length > 0 ? scaleNotes : currentPool;
+
                 for (let i = 1; i < this.sequenceLength; i++) {
                     // スケール内の音からランダムに選択
-                    const randomIndex = Math.floor(Math.random() * scaleNotes.length);
-                    this.currentNotesSequence.push(scaleNotes[randomIndex]);
+                    const randomIndex = Math.floor(Math.random() * candidates.length);
+                    this.currentNotesSequence.push(candidates[randomIndex]);
                 }
             }
             
