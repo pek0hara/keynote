@@ -8,6 +8,7 @@ class AudioEngine {
         this.audioContext = null;
         this.isInitialized = false;
         this.listenersAttached = false;
+        this.iosUnlocked = false;
 
         // メトロノーム関連
         this.metronomeInterval = null;
@@ -251,6 +252,17 @@ class AudioEngine {
     // ユーザー操作を監視して AudioContext を再開
     setupUserInteractionHandler() {
         const resumeAudio = async () => {
+            // iOSのサイレントモード（マナーモード）でもスピーカーから音が出るようにするための対策
+            // 初回のユーザー操作時に無音のHTML5 Audio要素を再生する
+            if (!this.iosUnlocked) {
+                this.iosUnlocked = true;
+                const audio = new Audio();
+                // 極めて短い無音のMP3データ
+                audio.src = 'data:audio/mp3;base64,SUQzBAAAAAABEVRYWFgAAAAAtAAAB5AAAAAAAAAAAAAA//NExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq';
+                audio.volume = 0.01;
+                audio.play().catch(() => {});
+            }
+
             await this.ensureAudioContextRunning();
 
             // Web Audio APIのロック解除用（特にiOS/Android）
