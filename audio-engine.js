@@ -625,7 +625,13 @@ class AudioEngine {
     }
 
     playNote(note, instrument = 'piano') {
-        const frequency = this.noteFrequencies[note];
+        let frequency;
+        if (instrument === 'bass') {
+            frequency = this.bassNoteFrequencies[note] || this.noteFrequencies[note];
+        } else {
+            frequency = this.noteFrequencies[note];
+        }
+
         if (!frequency) return;
         if (instrument === 'piano') this.playPiano(frequency);
         else if (instrument === 'guitar') this.playGuitar(frequency);
@@ -775,6 +781,25 @@ class AudioEngine {
                 return [...this.guitarValidNotes];
             default:
                 return this.getGuitarNotesByDifficulty('easy');
+        }
+    }
+
+    // ベース指板に存在する音を返す
+    getBassNotesByDifficulty(difficulty) {
+        switch (difficulty) {
+            case 'easy':
+                // 4弦ベースの開放弦〜5フレット程度 (シャープなし)
+                return ['E1', 'F1', 'G1', 'A1', 'B1', 'C2', 'D2', 'E2', 'F2', 'G2'];
+            case 'medium':
+                // シャープなしの全音
+                return ['E1', 'F1', 'G1', 'A1', 'B1', 'C2', 'D2', 'E2', 'F2', 'G2', 'A2', 'B2', 'C3'];
+            case 'hard':
+                // 全ての音
+                return ['E1', 'F1', 'F#1', 'G1', 'G#1', 'A1', 'A#1', 'B1',
+                        'C2', 'C#2', 'D2', 'D#2', 'E2', 'F2', 'F#2', 'G2',
+                        'G#2', 'A2', 'A#2', 'B2', 'C3'];
+            default:
+                return this.getBassNotesByDifficulty('easy');
         }
     }
     

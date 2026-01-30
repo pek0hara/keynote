@@ -423,9 +423,15 @@ class Game {
                 hardDesc.textContent = 'BPM 120・48拍';
             }
         } else if (this.instrument === 'bass') {
-            easyDesc.textContent = '4コード・BPM80';
-            mediumDesc.textContent = '6コード・BPM100';
-            hardDesc.textContent = '8コード・BPM120';
+            if (this.gameMode === 'single') {
+                easyDesc.textContent = 'E1 - G2';
+                mediumDesc.textContent = 'E1 - C3';
+                hardDesc.textContent = '全音域';
+            } else {
+                easyDesc.textContent = '4コード・BPM80';
+                mediumDesc.textContent = '6コード・BPM100';
+                hardDesc.textContent = '8コード・BPM120';
+            }
         } else if (this.gameMode === 'chord') {
             easyDesc.textContent = 'メジャーコード';
             mediumDesc.textContent = '+マイナー';
@@ -471,10 +477,13 @@ class Game {
         } else if (this.instrument === 'maracas') {
             // マラカス楽器選択時
             this.setupMaracasMode();
-        } else if (this.instrument === 'bass') {
-            // ベース楽器選択時
+        } else if (this.instrument === 'bass' && this.gameMode === 'chord') {
+            // ベース楽器（コードモード＝ルート弾きゲーム）
             this.availableChords = audioEngine.getChordsByDifficulty(this.difficulty);
             this.setupBassMode();
+        } else if (this.instrument === 'bass' && this.gameMode === 'single') {
+            // ベース楽器（単音モード）
+            this.availableNotes = audioEngine.getBassNotesByDifficulty(this.difficulty);
         } else if (this.gameMode === 'chord') {
             this.availableChords = audioEngine.getChordsByDifficulty(this.difficulty);
         } else {
@@ -637,8 +646,9 @@ class Game {
         const answerSection = document.querySelector('.answer-section');
         grid.innerHTML = '';
 
-        // ドラム・ベース・マラカス楽器では回答ボタンを非表示
-        if (this.instrument === 'drum' || this.instrument === 'bass' || this.instrument === 'maracas') {
+        // ドラム・ベース（コードモード）・マラカス楽器では回答ボタンを非表示
+        // ベースの単音モードは回答ボタンを表示する
+        if (this.instrument === 'drum' || this.instrument === 'maracas' || (this.instrument === 'bass' && this.gameMode === 'chord')) {
             answerSection.classList.add('hidden');
             return;
         }
@@ -724,8 +734,8 @@ class Game {
             return;
         }
 
-        // ベース楽器の場合
-        if (this.instrument === 'bass') {
+        // ベース楽器（コードモード）の場合
+        if (this.instrument === 'bass' && this.gameMode === 'chord') {
             this.setupBassQuestion();
             this.updateBassUI();
             document.getElementById('current-score').textContent = this.score;
@@ -817,7 +827,7 @@ class Game {
             this.startDrumMode();
         } else if (this.instrument === 'maracas') {
             this.startMaracasMode();
-        } else if (this.instrument === 'bass') {
+        } else if (this.instrument === 'bass' && this.gameMode === 'chord') {
             this.startBassMode();
         } else if (this.gameMode === 'chord') {
             this.playCurrentChord();
