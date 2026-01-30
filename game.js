@@ -76,6 +76,8 @@ class Game {
         this.guitarNoteCache = new Map();
         this.bassNoteCache = new Map();
         this.drumPadCache = new Map();
+        this.drumNoteElements = []; // ドラムノート要素のキャッシュ（配列で順序を保持）
+        this.beatDots = null; // ベースモードのビートインジケーター
 
         this.init();
     }
@@ -213,6 +215,9 @@ class Game {
                 this.drumPadCache.set(drum, pad);
             }
         });
+
+        // ベースモードのビートインジケーターをキャッシュ
+        this.beatDots = document.querySelectorAll('.beat-dot');
     }
     
     initMaracasPad() {
@@ -1132,9 +1137,11 @@ class Game {
         }
 
         // ビートインジケーターをリセット
-        document.querySelectorAll('.beat-dot').forEach((dot, index) => {
-            dot.classList.toggle('active', index < this.bassBeatCount % this.bassBeatsPerChord);
-        });
+        if (this.beatDots) {
+            this.beatDots.forEach((dot, index) => {
+                dot.classList.toggle('active', index < this.bassBeatCount % this.bassBeatsPerChord);
+            });
+        }
     }
 
     startBassMode() {
@@ -1173,9 +1180,11 @@ class Game {
         playBtn.querySelector('.play-text').textContent = '音を聴く';
 
         // ビートインジケーターをリセット
-        document.querySelectorAll('.beat-dot').forEach(dot => {
-            dot.classList.remove('active');
-        });
+        if (this.beatDots) {
+            this.beatDots.forEach(dot => {
+                dot.classList.remove('active');
+            });
+        }
     }
 
     onBassBeat(beatCount, isAccent) {
@@ -1199,9 +1208,11 @@ class Game {
 
         // ビートインジケーターを更新
         const beatInChord = beatCount % this.bassBeatsPerChord;
-        document.querySelectorAll('.beat-dot').forEach((dot, index) => {
-            dot.classList.toggle('active', index === beatInChord);
-        });
+        if (this.beatDots) {
+            this.beatDots.forEach((dot, index) => {
+                dot.classList.toggle('active', index === beatInChord);
+            });
+        }
 
         // 1拍目でコードを鳴らす
         if (isAccent || beatCount % this.bassBeatsPerChord === 0) {
@@ -1454,6 +1465,9 @@ class Game {
             if (lane) lane.innerHTML = '';
         });
 
+        // キャッシュをクリア
+        this.drumNoteElements = [];
+
         // 期待されるビートごとにノートを生成
         this.drumExpectedBeats.forEach((expected, index) => {
             const lane = lanes[expected.type];
@@ -1464,6 +1478,7 @@ class Game {
             note.dataset.beat = expected.beat;
             note.dataset.index = index;
             lane.appendChild(note);
+            this.drumNoteElements.push(note);
         });
     }
 
@@ -1518,8 +1533,8 @@ class Game {
 
         const laneWidth = firstLane.offsetWidth;
 
-        // 全ノートの位置を更新
-        const notes = rhythmLane.querySelectorAll('.drum-note');
+        // 全ノートの位置を更新（キャッシュを使用）
+        const notes = this.drumNoteElements;
         notes.forEach(note => {
             const noteBeat = parseInt(note.dataset.beat);
             const noteIndex = parseInt(note.dataset.index);
@@ -1612,8 +1627,8 @@ class Game {
                         this.drumBeatCount = 0;
                         this.drumCorrectHits = 0;
                         this.drumHitBeats = new Set(); // ヒット状態をリセット
-                        // ノートのヒット状態をリセット
-                        document.querySelectorAll('.drum-note').forEach(note => {
+                        // ノートのヒット状態をリセット（キャッシュを使用）
+                        this.drumNoteElements.forEach(note => {
                             note.classList.remove('hit');
                         });
                         if (this.drumFullPattern) {
@@ -1807,7 +1822,7 @@ class Game {
 
     // ノートをヒット済みとしてマーク
     markNoteAsHit(noteIndex) {
-        const note = document.querySelector(`.drum-note[data-index="${noteIndex}"]`);
+        const note = this.drumNoteElements[noteIndex];
         if (note) {
             note.classList.add('hit');
         }
