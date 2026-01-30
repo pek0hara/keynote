@@ -18,7 +18,7 @@ class Game {
         this.streak = 0;
         this.maxStreak = 0;
         this.questionNumber = 0;
-        this.totalQuestions = 10;
+        this.totalQuestions = 5;
         this.correctCount = 0;
         this.availableNotes = [];
         this.availableChords = []; // コードモード用
@@ -382,6 +382,10 @@ class Game {
         const chordBtn = document.getElementById('btn-chord');
         const challengeBtn = document.getElementById('btn-challenge');
         const unlimitedBtn = document.getElementById('btn-unlimited');
+        const modeSelectionGroup = document.getElementById('mode-selection-group');
+
+        // デフォルトで表示
+        if (modeSelectionGroup) modeSelectionGroup.classList.remove('hidden');
 
         if (instrument === 'maracas') {
             // マラカスの場合：チャレンジ/エンドレスを表示、単音/コードを非表示
@@ -396,6 +400,14 @@ class Game {
             } else {
                 // 既存の選択を維持しつつUI更新
                 this.selectMode(this.gameMode);
+            }
+        } else if (instrument === 'piano' || instrument === 'guitar') {
+            // ピアノ・ギターの場合：モード選択自体を非表示（統一モード）
+            if (modeSelectionGroup) modeSelectionGroup.classList.add('hidden');
+
+            // 内部的にはSingleモードにする（難易度で変わるが初期値として）
+            if (this.gameMode === 'challenge' || this.gameMode === 'unlimited') {
+                this.selectMode('single');
             }
         } else {
             // その他の楽器：単音/コードを表示、チャレンジ/エンドレスを非表示
@@ -468,10 +480,14 @@ class Game {
                 mediumDesc.textContent = '6コード・BPM100';
                 hardDesc.textContent = '8コード・BPM120';
             }
-        } else if (this.gameMode === 'chord') {
+        } else if (this.gameMode === 'chord' && this.instrument !== 'piano' && this.instrument !== 'guitar') {
             easyDesc.textContent = 'メジャーコード';
             mediumDesc.textContent = '+マイナー';
             hardDesc.textContent = '+セブンス';
+        } else if (this.instrument === 'piano' || this.instrument === 'guitar') {
+            easyDesc.textContent = '単音 (初級)';
+            mediumDesc.textContent = '単音 (中級)';
+            hardDesc.textContent = 'コード (上級)';
         } else {
             easyDesc.textContent = 'C D E F G A B';
             mediumDesc.textContent = '2オクターブ';
@@ -520,6 +536,22 @@ class Game {
         } else if (this.instrument === 'bass' && this.gameMode === 'single') {
             // ベース楽器（単音モード）
             this.availableNotes = audioEngine.getBassNotesByDifficulty(this.difficulty);
+        } else if (this.instrument === 'piano' || this.instrument === 'guitar') {
+            // ピアノ・ギターの場合（統一モード）
+            if (this.difficulty === 'hard') {
+                // 上級はコードモード
+                this.gameMode = 'chord';
+                // 開始時はメジャーコードのみ（後半で難しくなる）
+                this.availableChords = audioEngine.getChordsByDifficulty('easy');
+            } else {
+                // 初級・中級は単音モード
+                this.gameMode = 'single';
+                if (this.instrument === 'guitar') {
+                    this.availableNotes = audioEngine.getGuitarNotesByDifficulty(this.difficulty);
+                } else {
+                    this.availableNotes = audioEngine.getNotesByDifficulty(this.difficulty);
+                }
+            }
         } else if (this.gameMode === 'chord') {
             this.availableChords = audioEngine.getChordsByDifficulty(this.difficulty);
         } else {
@@ -721,6 +753,47 @@ class Game {
     
     nextQuestion() {
         this.questionNumber++;
+
+        // ピアノ・ギターの場合、後半（4問目以降）から難易度アップ
+        if ((this.instrument === 'piano' || this.instrument === 'guitar') && this.questionNumber === 4) {
+            if (this.difficulty === 'easy') {
+                // 初級：範囲を広げる（中級と同じ設定）
+                if (this.instrument === 'guitar') {
+                    this.availableNotes = audioEngine.getGuitarNotesByDifficulty('medium');
+                } else {
+                    this.availableNotes = audioEngine.getNotesByDifficulty('medium');
+                }
+
+                // ピアノの場合、上段鍵盤を表示
+                if (this.instrument === 'piano') {
+                    const keyboardUpper = document.getElementById('keyboard-upper');
+                    if (keyboardUpper) keyboardUpper.classList.remove('hidden');
+                }
+            } else if (this.difficulty === 'medium') {
+                // 中級：黒鍵を追加（2オクターブ全音階）
+                if (this.instrument === 'guitar') {
+                    this.availableNotes = audioEngine.getGuitarNotesByDifficulty('hard');
+                } else {
+                    // C3-C5の全音階を生成
+                    const chromatic = [];
+                    ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'].forEach(note => {
+                        chromatic.push(note + '3');
+                    });
+                    ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'].forEach(note => {
+                        chromatic.push(note + '4');
+                    });
+                    chromatic.push('C5');
+                    this.availableNotes = chromatic;
+                }
+            } else if (this.difficulty === 'hard') {
+                // 上級：マイナー・セブンスコードを追加
+                this.availableChords = audioEngine.getChordsByDifficulty('hard');
+            }
+
+            // 回答ボタンを再生成
+            this.generateAnswerButtons();
+        }
+
         this.hasPlayed = false;
         this.userAnswerSequence = []; // ユーザーの回答をリセット
 
