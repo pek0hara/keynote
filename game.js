@@ -70,6 +70,8 @@ class Game {
         this.isPianoGuideActive = false;
         this.isGuitarGuideActive = false;
 
+        this.beatDots = null;
+
         this.init();
     }
     
@@ -242,6 +244,8 @@ class Game {
                 this.updateBassGuide();
             });
         }
+
+        this.beatDots = document.querySelectorAll('.beat-dot');
     }
 
     initDrumPads() {
@@ -1074,9 +1078,11 @@ class Game {
         }
 
         // ビートインジケーターをリセット
-        document.querySelectorAll('.beat-dot').forEach((dot, index) => {
-            dot.classList.toggle('active', index < this.bassBeatCount % this.bassBeatsPerChord);
-        });
+        if (this.beatDots) {
+            this.beatDots.forEach((dot, index) => {
+                dot.classList.toggle('active', index < this.bassBeatCount % this.bassBeatsPerChord);
+            });
+        }
     }
 
     startBassMode() {
@@ -1115,9 +1121,11 @@ class Game {
         playBtn.querySelector('.play-text').textContent = '音を聴く';
 
         // ビートインジケーターをリセット
-        document.querySelectorAll('.beat-dot').forEach(dot => {
-            dot.classList.remove('active');
-        });
+        if (this.beatDots) {
+            this.beatDots.forEach(dot => {
+                dot.classList.remove('active');
+            });
+        }
     }
 
     onBassBeat(beatCount, isAccent) {
@@ -1141,9 +1149,11 @@ class Game {
 
         // ビートインジケーターを更新
         const beatInChord = beatCount % this.bassBeatsPerChord;
-        document.querySelectorAll('.beat-dot').forEach((dot, index) => {
-            dot.classList.toggle('active', index === beatInChord);
-        });
+        if (this.beatDots) {
+            this.beatDots.forEach((dot, index) => {
+                dot.classList.toggle('active', index === beatInChord);
+            });
+        }
 
         // 1拍目でコードを鳴らす
         if (isAccent || beatCount % this.bassBeatsPerChord === 0) {
