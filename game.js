@@ -392,6 +392,14 @@ class Game {
                 // 既存の選択を維持しつつUI更新
                 this.selectMode(this.gameMode);
             }
+        } else if (instrument === 'piano' || instrument === 'guitar') {
+            // ピアノ・ギターの場合：音当てモード（単音/コード選択は自動）のためボタン非表示
+            if(singleBtn) singleBtn.classList.add('hidden');
+            if(chordBtn) chordBtn.classList.add('hidden');
+            if(challengeBtn) challengeBtn.classList.add('hidden');
+            if(unlimitedBtn) unlimitedBtn.classList.add('hidden');
+
+            // モードはstartGameで決定されるため、ここでは何もしない
         } else {
             // その他の楽器：単音/コードを表示、チャレンジ/エンドレスを非表示
             if(singleBtn) singleBtn.classList.remove('hidden');
@@ -489,7 +497,23 @@ class Game {
         this.maxStreak = 0;
         this.questionNumber = 0;
         this.correctCount = 0;
-        this.sequenceLength = 3; // シーケンス長を3にリセット
+
+        // デフォルト設定（他の楽器用）
+        this.totalQuestions = 10;
+        this.sequenceLength = 3;
+
+        // ピアノ・ギターの設定
+        if (this.instrument === 'piano' || this.instrument === 'guitar') {
+            this.totalQuestions = 5; // 各級5問
+            this.sequenceLength = 1; // 1音/1コードから開始
+
+            // モード自動設定（上級＝コードモード）
+            if (this.difficulty === 'hard') {
+                this.gameMode = 'chord';
+            } else {
+                this.gameMode = 'single';
+            }
+        }
 
         // ベースモードの初期化
         this.bassIsPlaying = false;
@@ -718,6 +742,15 @@ class Game {
         this.questionNumber++;
         this.hasPlayed = false;
         this.userAnswerSequence = []; // ユーザーの回答をリセット
+
+        // ピアノ・ギターのプログレッシブ難易度（後半は難しくなる）
+        if (this.instrument === 'piano' || this.instrument === 'guitar') {
+            if (this.questionNumber >= 4) {
+                this.sequenceLength = 2; // 後半は2音/2コード
+            } else {
+                this.sequenceLength = 1; // 前半は1音/1コード
+            }
+        }
 
         // フィードバックを非表示（最終問題でも確実に閉じる）
         document.getElementById('feedback-display').classList.add('hidden');
@@ -2153,7 +2186,10 @@ class Game {
 
                 this.showFeedback(false, expectedChord, this.currentChordsSequence);
                 this.streak = 0;
-                this.sequenceLength = 3; // シーケンス長を3にリセット
+                // ピアノ・ギター以外の場合のみリセット
+                if (this.instrument !== 'piano' && this.instrument !== 'guitar') {
+                    this.sequenceLength = 3;
+                }
 
                 setTimeout(() => this.nextQuestion(), 2000);
                 return;
@@ -2175,8 +2211,11 @@ class Game {
                 this.score += 100 + (this.streak * 10) + (this.sequenceLength - 1) * 50;
 
                 // シーケンス長を増やす（最大5コードまで）
-                if (this.sequenceLength < 5) {
-                    this.sequenceLength++;
+                // ピアノ・ギターの場合は進行度で管理するため自動増加させない
+                if (this.instrument !== 'piano' && this.instrument !== 'guitar') {
+                    if (this.sequenceLength < 5) {
+                        this.sequenceLength++;
+                    }
                 }
 
                 setTimeout(() => this.nextQuestion(), 1500);
@@ -2220,7 +2259,10 @@ class Game {
 
                 this.showFeedback(false, expectedNote, this.currentNotesSequence);
                 this.streak = 0;
-                this.sequenceLength = 3; // シーケンス長を3にリセット
+                // ピアノ・ギター以外の場合のみリセット
+                if (this.instrument !== 'piano' && this.instrument !== 'guitar') {
+                    this.sequenceLength = 3;
+                }
 
                 setTimeout(() => this.nextQuestion(), 2000);
                 return;
@@ -2242,8 +2284,11 @@ class Game {
                 this.score += 100 + (this.streak * 10) + (this.sequenceLength - 1) * 50; // シーケンス長に応じてボーナス
                 
                 // シーケンス長を増やす（最大5音まで）
-                if (this.sequenceLength < 5) {
-                    this.sequenceLength++;
+                // ピアノ・ギターの場合は進行度で管理するため自動増加させない
+                if (this.instrument !== 'piano' && this.instrument !== 'guitar') {
+                    if (this.sequenceLength < 5) {
+                        this.sequenceLength++;
+                    }
                 }
                 
                 setTimeout(() => this.nextQuestion(), 1500);
