@@ -66,6 +66,10 @@ class Game {
         this.isMinorActive = false;
         this.isSeventhActive = false;
 
+        // ピアノ・ギターガイド
+        this.isPianoGuideActive = false;
+        this.isGuitarGuideActive = false;
+
         this.init();
     }
     
@@ -88,9 +92,11 @@ class Game {
         this.metronomeRod = document.getElementById('metronome-rod');
 
         // ボタンイベント
-        document.querySelectorAll('.instrument-btn').forEach(btn => {
-            btn.addEventListener('click', () => this.selectInstrument(btn.dataset.instrument));
-        });
+        // 楽器選択イベント (プルダウン)
+        const instrumentSelect = document.getElementById('instrument-select');
+        if (instrumentSelect) {
+            instrumentSelect.addEventListener('change', (e) => this.selectInstrument(e.target.value));
+        }
         
         document.querySelectorAll('.mode-btn').forEach(btn => {
             btn.addEventListener('click', () => this.selectMode(btn.dataset.mode));
@@ -136,9 +142,11 @@ class Game {
         
         // ピアノ鍵盤イベント
         this.initPianoKeyboard();
+        this.initPianoGuide();
 
         // ギター弦イベント
         this.initGuitarStrings();
+        this.initGuitarGuide();
 
         // ベースフレットボードイベント
         this.initBassFretboard();
@@ -174,6 +182,16 @@ class Game {
             key.addEventListener('click', () => this.playKeyNote(key));
         });
     }
+
+    initPianoGuide() {
+        const guideToggle = document.getElementById('piano-guide-checkbox');
+        if (guideToggle) {
+            guideToggle.addEventListener('change', (e) => {
+                this.isPianoGuideActive = e.target.checked;
+                this.updatePianoGuide();
+            });
+        }
+    }
     
     initGuitarStrings() {
         // 各フレットポジションにイベントを追加
@@ -196,6 +214,16 @@ class Game {
             seventhBtn.addEventListener('click', () => {
                 this.isSeventhActive = !this.isSeventhActive;
                 seventhBtn.classList.toggle('active', this.isSeventhActive);
+            });
+        }
+    }
+
+    initGuitarGuide() {
+        const guideToggle = document.getElementById('guitar-guide-checkbox');
+        if (guideToggle) {
+            guideToggle.addEventListener('change', (e) => {
+                this.isGuitarGuideActive = e.target.checked;
+                this.updateGuitarGuide();
             });
         }
     }
@@ -337,9 +365,12 @@ class Game {
     
     selectInstrument(instrument) {
         this.instrument = instrument;
-        document.querySelectorAll('.instrument-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.instrument === instrument);
-        });
+
+        // プルダウンの値を同期（プログラムからの変更用）
+        const instrumentSelect = document.getElementById('instrument-select');
+        if (instrumentSelect && instrumentSelect.value !== instrument) {
+            instrumentSelect.value = instrument;
+        }
 
         // モードボタンの表示切り替え
         const singleBtn = document.getElementById('btn-single');
@@ -620,15 +651,18 @@ class Game {
         } else if (this.instrument === 'piano') {
             this.pianoKeyboard.classList.remove('hidden');
             this.updateBlackKeysVisibility();
+            this.updatePianoGuide();
         } else {
             // guitar
             this.guitarFretboard.classList.remove('hidden');
+            this.updateGuitarGuide();
         }
     }
     
     updateBlackKeysVisibility() {
-        // コードモードまたは上級モードでは黒鍵を表示
-        const showBlackKeys = this.gameMode === 'chord' || this.difficulty === 'hard';
+        // 初級・中級でも黒鍵を表示（ユーザー要望により常時表示）
+        // 元のロジック: const showBlackKeys = this.gameMode === 'chord' || this.difficulty === 'hard';
+        const showBlackKeys = true;
         document.querySelectorAll('.black-key').forEach(key => {
             key.classList.toggle('hidden-key', !showBlackKeys);
         });
@@ -963,6 +997,48 @@ class Game {
 
     animateCurrentChord() {
         this.animateChord(this.currentChord);
+    }
+
+    updatePianoGuide() {
+        document.querySelectorAll('.white-key, .black-key').forEach(key => {
+            key.classList.remove('scale-guide');
+        });
+
+        if (!this.isPianoGuideActive) return;
+
+        // Cメジャースケールを表示
+        const scaleNotes = audioEngine.getScaleNotes('C', 'major');
+
+        document.querySelectorAll('.white-key, .black-key').forEach(key => {
+            const note = key.dataset.note;
+            if (!note) return;
+            const noteName = note.replace(/[0-9]/g, '');
+
+            if (scaleNotes.includes(noteName)) {
+                key.classList.add('scale-guide');
+            }
+        });
+    }
+
+    updateGuitarGuide() {
+        document.querySelectorAll('.fret-position').forEach(pos => {
+            pos.classList.remove('scale-guide');
+        });
+
+        if (!this.isGuitarGuideActive) return;
+
+        // Cメジャースケールを表示
+        const scaleNotes = audioEngine.getScaleNotes('C', 'major');
+
+        document.querySelectorAll('.fret-position').forEach(pos => {
+            const note = pos.dataset.note;
+            if (!note) return;
+            const noteName = note.replace(/[0-9]/g, '');
+
+            if (scaleNotes.includes(noteName)) {
+                pos.classList.add('scale-guide');
+            }
+        });
     }
 
     // ========== ベースモード関連 ==========
