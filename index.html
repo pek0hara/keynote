@@ -156,6 +156,17 @@
                     <div class="instrument-visual" id="instrument-visual">
                         <!-- ピアノ鍵盤 -->
                         <div class="piano-keyboard" id="piano-keyboard">
+                            <!-- ピアノコントロール（スケールガイド） -->
+                            <div class="piano-controls" style="margin-bottom: 10px;">
+                                <div class="bass-guide-control">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="piano-guide-checkbox">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                    <span class="toggle-label">スケールガイド</span>
+                                </div>
+                            </div>
+
                             <!-- 上段: C3-B3（中級以上で表示） -->
                             <div class="keyboard-row keyboard-row-upper hidden" id="keyboard-upper">
                                 <div class="keyboard-container">
@@ -207,6 +218,15 @@
                             <div class="guitar-controls">
                                 <button class="modifier-btn" id="btn-minor">minor</button>
                                 <button class="modifier-btn" id="btn-seventh">7th</button>
+
+                                <!-- スケールガイド -->
+                                <div class="bass-guide-control" style="margin-left: 10px; background: rgba(255, 255, 255, 0.1); padding: 4px 12px; border-radius: 20px;">
+                                    <label class="toggle-switch" style="transform: scale(0.8);">
+                                        <input type="checkbox" id="guitar-guide-checkbox">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                    <span class="toggle-label" style="font-size: 0.8rem;">ガイド</span>
+                                </div>
                             </div>
                             <div class="fretboard-container">
                                 <!-- 弦のラベル -->
