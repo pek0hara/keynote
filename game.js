@@ -50,6 +50,7 @@ class Game {
         this.drumJudgmentTimeout = null; // 判定表示のタイムアウト
         this.drumPreviewPhase = false; // プレビューフェーズ中かどうか
         this.drumPreviewCount = 0; // プレビュー周回数（2周で終了）
+        this.drumNoteElements = []; // キャッシュされたドラムノート要素
 
         // マラカスモード用
         this.maracasBpm = 100;
@@ -1449,6 +1450,9 @@ class Game {
             kick: document.getElementById('kick-lane-notes')
         };
 
+        // キャッシュをクリア
+        this.drumNoteElements = [];
+
         // 各レーンをクリア
         Object.values(lanes).forEach(lane => {
             if (lane) lane.innerHTML = '';
@@ -1464,6 +1468,7 @@ class Game {
             note.dataset.beat = expected.beat;
             note.dataset.index = index;
             lane.appendChild(note);
+            this.drumNoteElements.push(note);
         });
     }
 
@@ -1519,7 +1524,7 @@ class Game {
         const laneWidth = firstLane.offsetWidth;
 
         // 全ノートの位置を更新
-        const notes = rhythmLane.querySelectorAll('.drum-note');
+        const notes = this.drumNoteElements;
         notes.forEach(note => {
             const noteBeat = parseInt(note.dataset.beat);
             const noteIndex = parseInt(note.dataset.index);
@@ -1613,7 +1618,7 @@ class Game {
                         this.drumCorrectHits = 0;
                         this.drumHitBeats = new Set(); // ヒット状態をリセット
                         // ノートのヒット状態をリセット
-                        document.querySelectorAll('.drum-note').forEach(note => {
+                        this.drumNoteElements.forEach(note => {
                             note.classList.remove('hit');
                         });
                         if (this.drumFullPattern) {
@@ -1807,7 +1812,7 @@ class Game {
 
     // ノートをヒット済みとしてマーク
     markNoteAsHit(noteIndex) {
-        const note = document.querySelector(`.drum-note[data-index="${noteIndex}"]`);
+        const note = this.drumNoteElements[noteIndex];
         if (note) {
             note.classList.add('hit');
         }
