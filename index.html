@@ -41,27 +41,14 @@
                     <!-- 楽器選択 -->
                     <div class="selection-group">
                         <h3 class="selection-label">楽器を選択</h3>
-                        <div class="instrument-selector">
-                            <button class="instrument-btn active" data-instrument="piano" id="btn-piano">
-                                <span class="instrument-icon">🎹</span>
-                                <span class="instrument-name">ピアノ</span>
-                            </button>
-                            <button class="instrument-btn" data-instrument="guitar" id="btn-guitar">
-                                <span class="instrument-icon">🎸</span>
-                                <span class="instrument-name">ギター</span>
-                            </button>
-                            <button class="instrument-btn" data-instrument="bass" id="btn-bass">
-                                <span class="instrument-icon">🎸</span>
-                                <span class="instrument-name">ベース</span>
-                            </button>
-                            <button class="instrument-btn" data-instrument="drum" id="btn-drum">
-                                <span class="instrument-icon">🥁</span>
-                                <span class="instrument-name">ドラム</span>
-                            </button>
-                            <button class="instrument-btn" data-instrument="maracas" id="btn-maracas">
-                                <span class="instrument-icon">🪇</span>
-                                <span class="instrument-name">マラカス</span>
-                            </button>
+                        <div class="instrument-selector-wrapper">
+                            <select class="instrument-select" id="instrument-select">
+                                <option value="piano">🎹 ピアノ</option>
+                                <option value="guitar">🎸 ギター</option>
+                                <option value="bass">🎸 ベース</option>
+                                <option value="drum">🥁 ドラム</option>
+                                <option value="maracas">🪇 マラカス</option>
+                            </select>
                         </div>
                     </div>
 

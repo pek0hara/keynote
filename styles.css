@@ -290,57 +290,48 @@ body {
     font-family: 'Outfit', sans-serif;
 }
 
-/* 楽器選択ボタン */
-.instrument-selector {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--spacing-md);
+/* 楽器選択プルダウン */
+.instrument-selector-wrapper {
+    position: relative;
+    width: 100%;
 }
 
-.instrument-btn {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--spacing-xs);
-    padding: var(--spacing-sm) var(--spacing-md);
+.instrument-select {
+    width: 100%;
+    appearance: none;
+    -webkit-appearance: none;
     background: rgba(255, 255, 255, 0.05);
     border: 2px solid rgba(255, 255, 255, 0.1);
     border-radius: var(--radius-lg);
+    padding: var(--spacing-md) var(--spacing-lg);
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    font-weight: 600;
     cursor: pointer;
     transition: all var(--transition-normal);
-    color: var(--text-primary);
+    font-family: inherit;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1.2em;
 }
 
-.instrument-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-    transform: translateY(-2px);
+.instrument-select:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
 }
 
-.instrument-btn.active {
+.instrument-select:focus {
+    outline: none;
     border-color: var(--piano-color);
-    background: rgba(102, 126, 234, 0.2);
-    box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 0 15px rgba(102, 126, 234, 0.3);
+    background-color: rgba(255, 255, 255, 0.1);
 }
 
-.instrument-btn[data-instrument="guitar"].active {
-    border-color: var(--guitar-color);
-    background: rgba(245, 87, 108, 0.2);
-    box-shadow: 0 0 20px rgba(245, 87, 108, 0.3);
-}
-
-.instrument-btn[data-instrument="maracas"].active {
-    border-color: #feca57;
-    background: rgba(254, 202, 87, 0.2);
-    box-shadow: 0 0 20px rgba(254, 202, 87, 0.3);
-}
-
-.instrument-icon {
-    font-size: 1.8rem;
-}
-
-.instrument-name {
-    font-weight: 600;
-    font-size: 1.1rem;
+.instrument-select option {
+    background: #1a1a2e;
+    color: white;
+    padding: 10px;
 }
 
 /* 難易度選択ボタン */

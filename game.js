@@ -88,9 +88,11 @@ class Game {
         this.metronomeRod = document.getElementById('metronome-rod');
 
         // ボタンイベント
-        document.querySelectorAll('.instrument-btn').forEach(btn => {
-            btn.addEventListener('click', () => this.selectInstrument(btn.dataset.instrument));
-        });
+        // 楽器選択イベント (プルダウン)
+        const instrumentSelect = document.getElementById('instrument-select');
+        if (instrumentSelect) {
+            instrumentSelect.addEventListener('change', (e) => this.selectInstrument(e.target.value));
+        }
         
         document.querySelectorAll('.mode-btn').forEach(btn => {
             btn.addEventListener('click', () => this.selectMode(btn.dataset.mode));
@@ -337,9 +339,12 @@ class Game {
     
     selectInstrument(instrument) {
         this.instrument = instrument;
-        document.querySelectorAll('.instrument-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.instrument === instrument);
-        });
+
+        // プルダウンの値を同期（プログラムからの変更用）
+        const instrumentSelect = document.getElementById('instrument-select');
+        if (instrumentSelect && instrumentSelect.value !== instrument) {
+            instrumentSelect.value = instrument;
+        }
 
         // モードボタンの表示切り替え
         const singleBtn = document.getElementById('btn-single');
