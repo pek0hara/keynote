@@ -70,6 +70,13 @@ class Game {
         this.isPianoGuideActive = false;
         this.isGuitarGuideActive = false;
 
+        // DOM要素キャッシュ
+        this.pianoKeyCache = new Map();
+        this.guitarFretCache = new Map();
+        this.guitarNoteCache = new Map();
+        this.bassNoteCache = new Map();
+        this.drumPadCache = new Map();
+
         this.init();
     }
     
@@ -156,6 +163,56 @@ class Game {
 
         // マラカスパッドイベント
         this.initMaracasPad();
+
+        // キャッシュの初期化
+        this.initCaches();
+    }
+
+    initCaches() {
+        // ピアノ鍵盤キャッシュ
+        document.querySelectorAll('.white-key, .black-key').forEach(key => {
+            const note = key.dataset.note;
+            if (note) {
+                this.pianoKeyCache.set(note, key);
+            }
+        });
+
+        // ギターフレットキャッシュ
+        document.querySelectorAll('#guitar-fretboard .fret-position').forEach(pos => {
+            const string = pos.dataset.string;
+            const fret = pos.dataset.fret;
+            const note = pos.dataset.note;
+
+            if (string !== undefined && fret !== undefined) {
+                this.guitarFretCache.set(`${string}-${fret}`, pos);
+            }
+
+            if (note) {
+                if (!this.guitarNoteCache.has(note)) {
+                    this.guitarNoteCache.set(note, []);
+                }
+                this.guitarNoteCache.get(note).push(pos);
+            }
+        });
+
+        // ベースフレットキャッシュ
+        document.querySelectorAll('#bass-fretboard .bass-fret-position').forEach(pos => {
+            const note = pos.dataset.note;
+            if (note) {
+                if (!this.bassNoteCache.has(note)) {
+                    this.bassNoteCache.set(note, []);
+                }
+                this.bassNoteCache.get(note).push(pos);
+            }
+        });
+
+        // ドラムパッドキャッシュ
+        document.querySelectorAll('.drum-pad').forEach(pad => {
+            const drum = pad.dataset.drum;
+            if (drum) {
+                this.drumPadCache.set(drum, pad);
+            }
+        });
     }
     
     initMaracasPad() {
@@ -932,33 +989,36 @@ class Game {
     animateCurrentNote() {
         if (this.instrument === 'piano') {
             // ピアノの場合：対応する鍵盤をハイライト
-            const key = document.querySelector(`[data-note="${this.currentNote}"]`);
-            if (key && (key.classList.contains('white-key') || key.classList.contains('black-key'))) {
+            const key = this.pianoKeyCache.get(this.currentNote);
+            if (key) {
                 key.classList.add('playing');
                 setTimeout(() => key.classList.remove('playing'), 500);
             }
         } else {
             // ギターの場合：対応するフレットポジションをハイライト
-            const positions = document.querySelectorAll(`.fret-position[data-note="${this.currentNote}"]`);
-            positions.forEach(position => {
-                position.classList.add('playing');
-                setTimeout(() => position.classList.remove('playing'), 500);
-            });
+            const positions = this.guitarNoteCache.get(this.currentNote);
+            if (positions) {
+                positions.forEach(position => {
+                    position.classList.add('playing');
+                    setTimeout(() => position.classList.remove('playing'), 500);
+                });
+            }
         }
     }
     
     animateNote(note) {
         if (this.instrument === 'piano') {
             // ピアノの場合：対応する鍵盤をハイライト
-            const key = document.querySelector(`[data-note="${note}"]`);
-            if (key && (key.classList.contains('white-key') || key.classList.contains('black-key'))) {
+            const key = this.pianoKeyCache.get(note);
+            if (key) {
                 key.classList.add('playing');
                 setTimeout(() => key.classList.remove('playing'), 500);
             }
         } else {
             // ギターの場合：対応するフレットポジションを1つだけハイライト
-            const position = document.querySelector(`.fret-position[data-note="${note}"]`);
-            if (position) {
+            const positions = this.guitarNoteCache.get(note);
+            if (positions && positions.length > 0) {
+                const position = positions[0];
                 position.classList.add('playing');
                 setTimeout(() => position.classList.remove('playing'), 500);
             }
@@ -971,8 +1031,8 @@ class Game {
             const notes = audioEngine.getChordNotes(chordName);
             notes.forEach((note, index) => {
                 setTimeout(() => {
-                    const key = document.querySelector(`[data-note="${note}"]`);
-                    if (key && (key.classList.contains('white-key') || key.classList.contains('black-key'))) {
+                    const key = this.pianoKeyCache.get(note);
+                    if (key) {
                         key.classList.add('playing');
                         setTimeout(() => key.classList.remove('playing'), 600);
                     }
@@ -983,9 +1043,7 @@ class Game {
             const chordForm = audioEngine.getGuitarChordForm(chordName);
             chordForm.forEach((pos, index) => {
                 setTimeout(() => {
-                    const position = document.querySelector(
-                        `.fret-position[data-string="${pos.string}"][data-fret="${pos.fret}"]`
-                    );
+                    const position = this.guitarFretCache.get(`${pos.string}-${pos.fret}`);
                     if (position) {
                         position.classList.add('playing');
                         setTimeout(() => position.classList.remove('playing'), 600);
@@ -1282,16 +1340,18 @@ class Game {
         });
 
         // 正誤のビジュアルフィードバック
-        const positions = document.querySelectorAll(`.bass-fret-position[data-note="${note}"]`);
-        positions.forEach(pos => {
-            if (noteName === expectedRoot) {
-                pos.classList.add('correct');
-                setTimeout(() => pos.classList.remove('correct'), 300);
-            } else {
-                pos.classList.add('wrong');
-                setTimeout(() => pos.classList.remove('wrong'), 300);
-            }
-        });
+        const positions = this.bassNoteCache.get(note);
+        if (positions) {
+            positions.forEach(pos => {
+                if (noteName === expectedRoot) {
+                    pos.classList.add('correct');
+                    setTimeout(() => pos.classList.remove('correct'), 300);
+                } else {
+                    pos.classList.add('wrong');
+                    setTimeout(() => pos.classList.remove('wrong'), 300);
+                }
+            });
+        }
     }
 
     evaluateBassPerformance() {
@@ -1627,7 +1687,7 @@ class Game {
         });
 
         // 対応するビートパッドをハイライト
-        const pad = document.querySelector(`.drum-pad[data-drum="${drumType}"]`);
+        const pad = this.drumPadCache.get(drumType);
         const flashOverlay = document.getElementById('drum-flash-overlay');
 
         if (pad) {
