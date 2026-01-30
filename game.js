@@ -1471,7 +1471,11 @@ class Game {
         // 期待されるビートごとにノートを生成
         this.drumExpectedBeats.forEach((expected, index) => {
             const lane = lanes[expected.type];
-            if (!lane) return;
+            if (!lane) {
+                // レーンが存在しない場合もインデックスを維持
+                this.drumNoteElements.push(null);
+                return;
+            }
 
             const note = document.createElement('div');
             note.className = `drum-note ${expected.type}`;
