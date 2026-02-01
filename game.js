@@ -2210,7 +2210,7 @@ class Game {
             }
 
             // 一時的にエラーメッセージを表示
-            hint.textContent = `不正解... 最初から！ (${originalText})`;
+            hint.textContent = '不正解... 最初から！';
             hint.style.color = '#f45c43';
 
             // 1秒後に元のメッセージに戻す
