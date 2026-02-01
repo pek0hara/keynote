@@ -160,10 +160,20 @@ class Game {
         // マラカスパッドイベント
         this.initMaracasPad();
 
+        // パスボタンイベント
+        this.initPassButton();
+
         // 初期表示のために楽器選択を実行
         this.selectInstrument(this.instrument);
     }
     
+    initPassButton() {
+        const btn = document.getElementById('pass-question-btn');
+        if (btn) {
+            btn.addEventListener('click', () => this.passQuestion());
+        }
+    }
+
     initMaracasPad() {
         const pad = document.getElementById('maracas-pad');
         if (!pad) return;
@@ -304,6 +314,9 @@ class Game {
                 this.highlightPressedNoteChord(note);
             }
             this.checkBassAnswer(note);
+        } else {
+            // 単音モード（または再生中でない場合）の回答チェック
+            this.handleInstrumentInput(note);
         }
     }
     
@@ -325,11 +338,18 @@ class Game {
             key.classList.add('playing');
             setTimeout(() => key.classList.remove('playing'), 300);
         }
+
+        // 回答チェック
+        this.handleInstrumentInput(note);
     }
 
     playFretPosition(position) {
         const note = position.dataset.note;
         if (!note) return;
+
+        // 回答チェック（先に処理して、コードモード時の音再生は後続に任せるか、あるいはここで行うか）
+        // handleInstrumentInputは音を鳴らさないので、ここで呼んでも問題ない
+        this.handleInstrumentInput(note);
 
         if (this.gameMode === 'chord') {
             // コードモード：音名とモディファイアからコードを構築して再生
@@ -701,38 +721,9 @@ class Game {
         const answerSection = document.querySelector('.answer-section');
         grid.innerHTML = '';
 
-        // ドラム・ベース（コードモード）・マラカス楽器では回答ボタンを非表示
-        // ベースの単音モードは回答ボタンを表示する
-        if (this.instrument === 'drum' || this.instrument === 'maracas' || (this.instrument === 'bass' && this.gameMode === 'chord')) {
-            answerSection.classList.add('hidden');
-            return;
-        }
-
-        answerSection.classList.remove('hidden');
-
-        if (this.gameMode === 'chord') {
-            // コードモード：利用可能なコード名でボタン生成
-            this.availableChords.forEach(chord => {
-                const btn = document.createElement('button');
-                btn.className = 'answer-btn chord-btn';
-                btn.dataset.chord = chord;
-                btn.textContent = chord;
-                btn.addEventListener('click', () => this.checkAnswer(chord));
-                grid.appendChild(btn);
-            });
-        } else {
-            // 単音モード：ユニークな音名のみ取得
-            const uniqueNotes = [...new Set(this.availableNotes.map(n => n.replace(/[0-9]/g, '')))];
-
-            uniqueNotes.forEach(note => {
-                const btn = document.createElement('button');
-                btn.className = 'answer-btn';
-                btn.dataset.note = note;
-                btn.textContent = audioEngine.getNoteNameJP(note);
-                btn.addEventListener('click', () => this.checkAnswer(note));
-                grid.appendChild(btn);
-            });
-        }
+        // 全てのモードで楽器を直接演奏して回答するため、選択ボタンは非表示
+        answerSection.classList.add('hidden');
+        return;
     }
     
     nextQuestion() {
@@ -957,7 +948,7 @@ class Game {
         if (this.sequenceLength > 1) {
             document.getElementById('hint-text').textContent = `${this.sequenceLength}音を順番にクリックしてください`;
         } else {
-            document.getElementById('hint-text').textContent = '音を聴いたら下のボタンで回答！';
+            document.getElementById('hint-text').textContent = '楽器を演奏して回答！';
         }
     }
     
@@ -2183,6 +2174,78 @@ class Game {
         document.getElementById('current-streak').textContent = this.streak;
 
         setTimeout(() => this.nextQuestion(), 3000);
+    }
+
+    handleInstrumentInput(note) {
+        // ゲームが進行中でない、またはまだ音を聞いていない場合は無視
+        if (!this.hasPlayed || this.questionNumber > this.totalQuestions) {
+            return;
+        }
+
+        // ドラム、マラカス、ベース(コードモード)はそれぞれのロジックで処理されるため除外
+        if (this.instrument === 'drum' || this.instrument === 'maracas' || (this.instrument === 'bass' && this.gameMode === 'chord')) {
+            return;
+        }
+
+        let isCorrect = false;
+
+        if (this.gameMode === 'chord') {
+            // コードモード：ルート音が一致すれば正解とする
+            const currentIndex = this.userAnswerSequence.length;
+            if (currentIndex >= this.currentChordsSequence.length) return;
+
+            const expectedChord = this.currentChordsSequence[currentIndex];
+
+            // ルート音を抽出 (例: "Cm" -> "C", "F#7" -> "F#")
+            const expectedRoot = expectedChord.replace(/m|7/g, '');
+            // 入力された音の音名 (例: "C4" -> "C")
+            const inputRoot = note.replace(/[0-9]/g, '');
+
+            isCorrect = (expectedRoot === inputRoot);
+
+            if (isCorrect) {
+                 this.checkAnswer(expectedChord);
+            }
+
+        } else {
+            // 単音モード：音名とオクターブが一致するか（完全一致）
+            const currentIndex = this.userAnswerSequence.length;
+            if (currentIndex >= this.currentNotesSequence.length) return;
+
+            const expectedNote = this.currentNotesSequence[currentIndex];
+
+            isCorrect = (note === expectedNote);
+
+            if (isCorrect) {
+                // checkAnswerは音名(Pitch Class)を期待している
+                const noteName = note.replace(/[0-9]/g, '');
+                this.checkAnswer(noteName);
+            }
+        }
+
+        // 不正解の場合は何もしない（音は鳴るが、ゲームは進行しない＝無限リトライ）
+    }
+
+    passQuestion() {
+        if (!this.hasPlayed || this.questionNumber > this.totalQuestions) return;
+
+        // 不正解扱いとして処理
+        this.streak = 0;
+
+        if (this.gameMode === 'chord') {
+            const currentChord = this.currentChordsSequence[this.userAnswerSequence.length];
+            this.showFeedback(false, currentChord, this.currentChordsSequence);
+        } else if (this.instrument === 'bass' && this.gameMode === 'single') {
+             // ベース単音モード
+            const currentNote = this.currentNotesSequence[this.userAnswerSequence.length];
+            this.showFeedback(false, currentNote, this.currentNotesSequence);
+        } else {
+            const currentNote = this.currentNotesSequence[this.userAnswerSequence.length];
+            const noteName = currentNote.replace(/[0-9]/g, '');
+            this.showFeedback(false, noteName, this.currentNotesSequence);
+        }
+
+        setTimeout(() => this.nextQuestion(), 2000);
     }
 
     checkAnswer(selected) {
