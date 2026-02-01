@@ -2598,3 +2598,13 @@ input:checked + .toggle-slider:before {
 .metronome-rod.swing-right {
     transform: rotate(35deg);
 }
+
+/* 画面全体のエラーフラッシュ（非ブロッキング） */
+.screen-flash-wrong {
+    animation: screenFlashWrong 0.4s ease-out;
+}
+
+@keyframes screenFlashWrong {
+    0%, 100% { background-color: transparent; }
+    15% { background-color: rgba(244, 92, 67, 0.2); }
+}
