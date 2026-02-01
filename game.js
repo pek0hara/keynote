@@ -2176,20 +2176,53 @@ class Game {
         setTimeout(() => this.nextQuestion(), 3000);
     }
 
-    handleWrongAnswerReset() {
-        const feedback = document.getElementById('feedback-display');
-        const icon = document.getElementById('feedback-icon');
-        const text = document.getElementById('feedback-text');
+    handleIncorrectInput() {
+        // 1. シーケンスをリセット（今の問題の入力をやり直し）
+        this.userAnswerSequence = [];
 
-        icon.className = 'feedback-icon wrong';
-        icon.textContent = '✗';
-        text.textContent = '不正解！最初からリセットします';
+        // 2. ビジュアルフィードバック（画面フラッシュ）
+        const appContainer = document.querySelector('.app-container');
+        if (appContainer) {
+            appContainer.classList.remove('screen-flash-wrong');
+            void appContainer.offsetWidth; // リフローを強制
+            appContainer.classList.add('screen-flash-wrong');
+        }
 
-        feedback.classList.remove('hidden');
+        // 3. UIの選択状態をクリア
+        document.querySelectorAll('.answer-btn').forEach(btn => {
+            btn.classList.remove('selected');
+        });
 
-        setTimeout(() => {
-            this.showScreen('start');
-        }, 1500);
+        // 4. ヒントテキストを更新（エラー表示）
+        const hint = document.getElementById('hint-text');
+        if (hint) {
+            // ヒントの元のテキストを復元するロジックが必要だが、
+            // シーケンス長とモードから再構築する方が確実
+            let originalText = '';
+            if (this.sequenceLength > 1) {
+                if (this.gameMode === 'chord') {
+                    originalText = `${this.sequenceLength}コードを順番に当ててください`;
+                } else {
+                    originalText = `${this.sequenceLength}音を順番に当ててください`;
+                }
+            } else {
+                originalText = '楽器を演奏して回答！'; // 単音/1コードの場合
+            }
+
+            // 一時的にエラーメッセージを表示
+            hint.textContent = `不正解... 最初から！ (${originalText})`;
+            hint.style.color = '#f45c43';
+
+            // 1秒後に元のメッセージに戻す
+            if (this.hintTimeout) clearTimeout(this.hintTimeout);
+            this.hintTimeout = setTimeout(() => {
+                const currentHint = document.getElementById('hint-text');
+                if (currentHint) {
+                    currentHint.textContent = originalText;
+                    currentHint.style.color = '';
+                }
+            }, 1000);
+        }
     }
 
     handleInstrumentInput(note) {
@@ -2240,7 +2273,7 @@ class Game {
         }
 
         if (!isCorrect) {
-            this.handleWrongAnswerReset();
+            this.handleIncorrectInput();
         }
     }
 
