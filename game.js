@@ -2176,6 +2176,22 @@ class Game {
         setTimeout(() => this.nextQuestion(), 3000);
     }
 
+    handleWrongAnswerReset() {
+        const feedback = document.getElementById('feedback-display');
+        const icon = document.getElementById('feedback-icon');
+        const text = document.getElementById('feedback-text');
+
+        icon.className = 'feedback-icon wrong';
+        icon.textContent = '✗';
+        text.textContent = '不正解！最初からリセットします';
+
+        feedback.classList.remove('hidden');
+
+        setTimeout(() => {
+            this.showScreen('start');
+        }, 1500);
+    }
+
     handleInstrumentInput(note) {
         // ゲームが進行中でない、またはまだ音を聞いていない場合は無視
         if (!this.hasPlayed || this.questionNumber > this.totalQuestions) {
@@ -2223,7 +2239,9 @@ class Game {
             }
         }
 
-        // 不正解の場合は何もしない（音は鳴るが、ゲームは進行しない＝無限リトライ）
+        if (!isCorrect) {
+            this.handleWrongAnswerReset();
+        }
     }
 
     passQuestion() {
