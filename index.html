@@ -64,6 +64,11 @@
                                 <span class="mode-name">コードモード</span>
                                 <span class="mode-desc">和音を当てる</span>
                             </button>
+                            <button class="mode-btn hidden" data-mode="song" id="btn-song">
+                                <span class="mode-icon">🎼</span>
+                                <span class="mode-name">楽曲モード</span>
+                                <span class="mode-desc">曲を練習する</span>
+                            </button>
                             <button class="mode-btn hidden" data-mode="challenge" id="btn-challenge">
                                 <span class="mode-icon">🎯</span>
                                 <span class="mode-name">チャレンジ</span>
@@ -83,6 +88,19 @@
                         <div class="bpm-control-group">
                             <input type="range" id="bpm-slider" min="40" max="240" step="1" value="100" class="bpm-slider">
                             <input type="number" id="bpm-input" min="40" max="240" value="100" class="bpm-input">
+                        </div>
+                    </div>
+
+                    <!-- 楽曲選択（楽曲モード用） -->
+                    <div class="selection-group hidden" id="song-settings">
+                        <h3 class="selection-label">楽曲を選択</h3>
+                        <div class="instrument-selector-wrapper">
+                            <select class="instrument-select" id="song-select">
+                                <option value="twinkle">きらきら星</option>
+                                <option value="kaeru">かえるの合唱</option>
+                                <option value="choucho">ちょうちょう</option>
+                                <option value="mary">メリーさんのひつじ</option>
+                            </select>
                         </div>
                     </div>
 
@@ -302,6 +320,29 @@
 
                         <!-- ベースモードUI -->
                         <div class="bass-mode-ui hidden" id="bass-mode-ui">
+                            <!-- 楽曲モード表示 -->
+                            <div class="song-mode-display hidden" id="song-mode-display">
+                                <div class="song-title-display">
+                                    <span class="song-title-label" id="song-title-label">きらきら星</span>
+                                </div>
+                                <div class="song-notation-bar" id="song-notation-bar">
+                                    <!-- JavaScriptで動的に生成 -->
+                                </div>
+                                <div class="song-current-note">
+                                    <span class="song-note-label">次の音</span>
+                                    <span class="song-note-name" id="song-current-note-name">C</span>
+                                </div>
+                                <div class="beat-indicator song-beat-indicator">
+                                    <span class="beat-dot" data-beat="0"></span>
+                                    <span class="beat-dot" data-beat="1"></span>
+                                    <span class="beat-dot" data-beat="2"></span>
+                                    <span class="beat-dot" data-beat="3"></span>
+                                </div>
+                                <div class="song-progress-info">
+                                    <span id="song-progress-text">0 / 0</span>
+                                </div>
+                            </div>
+
                             <!-- コード進行表示 -->
                             <div class="chord-progression-display">
                                 <div class="current-chord-display">

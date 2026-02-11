@@ -1649,6 +1649,120 @@ input:checked + .toggle-slider:before {
     font-weight: 700 !important;
 }
 
+/* 楽曲モード：次に弾くべき音のハイライト */
+.bass-fret-position.song-next-note {
+    background: rgba(0, 200, 83, 0.5) !important;
+    box-shadow: inset 0 0 0 2px rgba(0, 200, 83, 0.9), 0 0 12px rgba(0, 200, 83, 0.4) !important;
+    animation: song-note-pulse 0.8s ease-in-out infinite;
+}
+
+.bass-fret-position.song-next-note span {
+    opacity: 1 !important;
+    font-weight: 700 !important;
+    color: #fff !important;
+    text-shadow: 0 0 8px rgba(0, 200, 83, 0.8);
+    transform: scale(1.15);
+}
+
+@keyframes song-note-pulse {
+    0%, 100% { box-shadow: inset 0 0 0 2px rgba(0, 200, 83, 0.9), 0 0 12px rgba(0, 200, 83, 0.4) !important; }
+    50% { box-shadow: inset 0 0 0 2px rgba(0, 200, 83, 1), 0 0 20px rgba(0, 200, 83, 0.7) !important; }
+}
+
+/* 楽曲モード表示 */
+.song-mode-display {
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.song-title-display {
+    margin-bottom: 10px;
+}
+
+.song-title-label {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    letter-spacing: 0.05em;
+}
+
+/* ノーテーションバー（楽曲の音符表示） */
+.song-notation-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    justify-content: center;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    margin-bottom: 12px;
+    max-height: 80px;
+    overflow-y: auto;
+}
+
+.song-bar-note {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 24px;
+    padding: 2px 4px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.08);
+    transition: all 0.2s ease;
+}
+
+.song-bar-note.active {
+    background: rgba(0, 200, 83, 0.5);
+    color: #fff;
+    font-weight: 700;
+    transform: scale(1.15);
+    box-shadow: 0 0 8px rgba(0, 200, 83, 0.4);
+}
+
+.song-bar-note.completed {
+    background: rgba(100, 255, 218, 0.2);
+    color: rgba(100, 255, 218, 0.8);
+}
+
+.song-bar-note.completed.active {
+    background: rgba(0, 200, 83, 0.5);
+    color: #fff;
+}
+
+/* 現在のノート表示 */
+.song-current-note {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 8px;
+}
+
+.song-note-label {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.song-note-name {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #00c853;
+    text-shadow: 0 0 15px rgba(0, 200, 83, 0.5);
+    font-family: 'Outfit', sans-serif;
+}
+
+/* 楽曲進行状況 */
+.song-progress-info {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.5);
+}
+
 /* ピアノ・ギター用スケールガイド */
 .white-key.scale-guide {
     background: linear-gradient(180deg, #e0f2f1 0%, #b2dfdb 85%, #80cbc4 100%);

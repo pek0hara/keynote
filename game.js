@@ -36,6 +36,18 @@ class Game {
         this.bassExpectedRoots = []; // 期待されるルート音
         this.pressedChordTimeout = null; // 押した音のコードハイライト用タイマー
 
+        // 楽曲モード用
+        this.songId = 'twinkle'; // 選択中の楽曲ID
+        this.songData = null; // 楽曲データ
+        this.songNotes = []; // 楽曲のノート配列
+        this.songCurrentNoteIndex = 0; // 現在のノートインデックス
+        this.songBeatCount = 0; // ビートカウント
+        this.songTotalBeats = 0; // 楽曲の総ビート数
+        this.songBeatMap = []; // 各ビートに対応するノートインデックスのマップ
+        this.songIsPlaying = false; // 再生中フラグ
+        this.songUserInputs = []; // ユーザーの入力履歴
+        this.songCorrectNotes = new Set(); // 正解済みのノートインデックス
+
         // ドラムモード用
         this.drumPattern = null; // 現在のドラムパターン
         this.drumPatternName = 'basic8'; // パターン名
@@ -94,11 +106,20 @@ class Game {
         this.maracasModeUI = document.getElementById('maracas-mode-ui');
         this.metronomeRod = document.getElementById('metronome-rod');
 
+        // 楽曲モードUI要素
+        this.songModeDisplay = document.getElementById('song-mode-display');
+
         // ボタンイベント
         // 楽器選択イベント (プルダウン)
         const instrumentSelect = document.getElementById('instrument-select');
         if (instrumentSelect) {
             instrumentSelect.addEventListener('change', (e) => this.selectInstrument(e.target.value));
+        }
+
+        // 楽曲選択イベント
+        const songSelect = document.getElementById('song-select');
+        if (songSelect) {
+            songSelect.addEventListener('change', (e) => { this.songId = e.target.value; });
         }
         
         document.querySelectorAll('.mode-btn').forEach(btn => {
@@ -308,7 +329,10 @@ class Game {
         setTimeout(() => position.classList.remove('playing'), 300);
 
         // ベース楽器でゲーム中の場合、回答をチェック
-        if (this.instrument === 'bass' && this.bassIsPlaying) {
+        if (this.instrument === 'bass' && this.songIsPlaying) {
+            // 楽曲モード
+            this.checkSongAnswer(note);
+        } else if (this.instrument === 'bass' && this.bassIsPlaying) {
             // スケールガイド表示時は、押した音のコード構成音をハイライト
             if (this.isBassGuideActive) {
                 this.highlightPressedNoteChord(note);
@@ -403,6 +427,7 @@ class Game {
         // モードボタンの表示切り替え
         const singleBtn = document.getElementById('btn-single');
         const chordBtn = document.getElementById('btn-chord');
+        const songBtn = document.getElementById('btn-song');
         const challengeBtn = document.getElementById('btn-challenge');
         const unlimitedBtn = document.getElementById('btn-unlimited');
 
@@ -414,14 +439,30 @@ class Game {
             if(modeGroup) modeGroup.classList.remove('hidden');
             if(singleBtn) singleBtn.classList.add('hidden');
             if(chordBtn) chordBtn.classList.add('hidden');
+            if(songBtn) songBtn.classList.add('hidden');
             if(challengeBtn) challengeBtn.classList.remove('hidden');
             if(unlimitedBtn) unlimitedBtn.classList.remove('hidden');
 
             // デフォルトモードを設定（現在のモードが無効な場合）
-            if (this.gameMode === 'single' || this.gameMode === 'chord') {
+            if (this.gameMode === 'single' || this.gameMode === 'chord' || this.gameMode === 'song') {
                 this.selectMode('challenge');
             } else {
                 // 既存の選択を維持しつつUI更新
+                this.selectMode(this.gameMode);
+            }
+        } else if (instrument === 'bass') {
+            // ベースの場合：単音モードと楽曲モードを表示
+            if(modeGroup) modeGroup.classList.remove('hidden');
+            if(singleBtn) singleBtn.classList.remove('hidden');
+            if(chordBtn) chordBtn.classList.add('hidden');
+            if(songBtn) songBtn.classList.remove('hidden');
+            if(challengeBtn) challengeBtn.classList.add('hidden');
+            if(unlimitedBtn) unlimitedBtn.classList.add('hidden');
+
+            // デフォルトモードを設定
+            if (this.gameMode !== 'single' && this.gameMode !== 'song') {
+                this.selectMode('single');
+            } else {
                 this.selectMode(this.gameMode);
             }
         } else {
@@ -432,11 +473,12 @@ class Game {
 
             if(singleBtn) singleBtn.classList.add('hidden');
             if(chordBtn) chordBtn.classList.add('hidden');
+            if(songBtn) songBtn.classList.add('hidden');
             if(challengeBtn) challengeBtn.classList.add('hidden');
             if(unlimitedBtn) unlimitedBtn.classList.add('hidden');
 
             // ドラムやベースもモード選択は本来無効だが、とりあえずデフォルトに戻す
-            if (this.gameMode === 'challenge' || this.gameMode === 'unlimited') {
+            if (this.gameMode === 'challenge' || this.gameMode === 'unlimited' || this.gameMode === 'song') {
                 this.selectMode('single');
             } else {
                  this.selectMode(this.gameMode);
@@ -455,16 +497,23 @@ class Game {
 
         // エンドレスモードの場合、難易度選択を隠してBPM設定を表示
         const bpmSettings = document.getElementById('bpm-settings');
+        const songSettings = document.getElementById('song-settings');
         const difficultySelector = document.querySelector('.difficulty-selector').parentElement; // 親のselection-groupを取得
 
         if (mode === 'unlimited') {
             if(bpmSettings) bpmSettings.classList.remove('hidden');
+            if(songSettings) songSettings.classList.add('hidden');
             if(difficultySelector) difficultySelector.classList.add('hidden');
+        } else if (mode === 'song') {
+            if(bpmSettings) bpmSettings.classList.add('hidden');
+            if(songSettings) songSettings.classList.remove('hidden');
+            if(difficultySelector) difficultySelector.classList.remove('hidden');
         } else {
             if(bpmSettings) bpmSettings.classList.add('hidden');
+            if(songSettings) songSettings.classList.add('hidden');
             if(difficultySelector) difficultySelector.classList.remove('hidden');
         }
-        
+
         // 難易度説明をモードに応じて更新
         this.updateDifficultyDescriptions();
     }
@@ -489,8 +538,11 @@ class Game {
                 mediumDesc.textContent = 'BPM 100・32拍';
                 hardDesc.textContent = 'BPM 120・48拍';
             }
+        } else if (this.instrument === 'bass' && this.gameMode === 'song') {
+            easyDesc.textContent = 'BPM 70・ガイド付き';
+            mediumDesc.textContent = 'BPM 90';
+            hardDesc.textContent = 'BPM 110';
         } else if (this.instrument === 'bass') {
-            // ベースは常に単音モード
             easyDesc.textContent = '単音 (E1 - G2)';
             mediumDesc.textContent = '単音 (E1 - C3)';
             hardDesc.textContent = '単音 (全音域)';
@@ -528,13 +580,20 @@ class Game {
                 this.gameMode = 'single';
             }
         } else if (this.instrument === 'bass') {
-            // ベースは音当て（単音）モードのみ
-            this.gameMode = 'single';
+            // ベースは単音モードまたは楽曲モード（ユーザー選択を維持）
+            if (this.gameMode !== 'song') {
+                this.gameMode = 'single';
+            }
         }
 
         // ベースモードの初期化
         this.bassIsPlaying = false;
         this.bassUserInputs = [];
+
+        // 楽曲モードの初期化
+        this.songIsPlaying = false;
+        this.songUserInputs = [];
+        this.songCorrectNotes = new Set();
 
         // ドラムモードの初期化
         this.drumIsPlaying = false;
@@ -549,6 +608,9 @@ class Game {
         } else if (this.instrument === 'maracas') {
             // マラカス楽器選択時
             this.setupMaracasMode();
+        } else if (this.instrument === 'bass' && this.gameMode === 'song') {
+            // ベース楽器（楽曲モード）
+            this.setupSongMode();
         } else if (this.instrument === 'bass' && this.gameMode === 'chord') {
             // ベース楽器（コードモード＝ルート弾きゲーム）
             this.availableChords = audioEngine.getChordsByDifficulty(this.difficulty);
@@ -689,6 +751,17 @@ class Game {
             toggleBpmHeader(true);
         } else if (this.instrument === 'bass') {
             this.bassModeUI.classList.remove('hidden');
+            // 楽曲モードとコード進行表示の切り替え
+            const songDisplay = document.getElementById('song-mode-display');
+            const chordDisplay = document.querySelector('.chord-progression-display');
+            if (this.gameMode === 'song') {
+                if (songDisplay) songDisplay.classList.remove('hidden');
+                if (chordDisplay) chordDisplay.classList.add('hidden');
+                toggleBpmHeader(true);
+            } else {
+                if (songDisplay) songDisplay.classList.add('hidden');
+                if (chordDisplay) chordDisplay.classList.remove('hidden');
+            }
         } else if (this.instrument === 'piano') {
             this.pianoKeyboard.classList.remove('hidden');
             this.updateBlackKeysVisibility();
@@ -747,6 +820,7 @@ class Game {
             if (this.instrument === 'bass') {
                 audioEngine.stopMetronome();
                 this.bassIsPlaying = false;
+                this.songIsPlaying = false;
             }
             this.showResults();
             return;
@@ -777,6 +851,17 @@ class Game {
                 document.getElementById('question-number').textContent = `${this.questionNumber}/${this.totalQuestions}`;
                 document.getElementById('hint-text').textContent = 'スタートを押してBPMに合わせて振ろう！';
             }
+            return;
+        }
+
+        // ベース楽器（楽曲モード）の場合
+        if (this.instrument === 'bass' && this.gameMode === 'song') {
+            this.setupSongQuestion();
+            this.updateSongUI();
+            document.getElementById('current-score').textContent = this.score;
+            document.getElementById('current-streak').textContent = this.streak;
+            document.getElementById('question-number').textContent = `${this.questionNumber}/${this.totalQuestions}`;
+            document.getElementById('hint-text').textContent = 'スタートを押して楽曲を演奏しよう！';
             return;
         }
 
@@ -913,6 +998,8 @@ class Game {
             this.startDrumMode();
         } else if (this.instrument === 'maracas') {
             this.startMaracasMode();
+        } else if (this.instrument === 'bass' && this.gameMode === 'song') {
+            this.startSongMode();
         } else if (this.instrument === 'bass' && this.gameMode === 'chord') {
             this.startBassMode();
         } else if (this.gameMode === 'chord') {
@@ -1395,6 +1482,292 @@ class Game {
         document.getElementById('current-streak').textContent = this.streak;
 
         setTimeout(() => this.nextQuestion(), 2000);
+    }
+
+    // ========== 楽曲モード関連 ==========
+
+    setupSongMode() {
+        this.songData = audioEngine.getSong(this.songId);
+        if (!this.songData) return;
+
+        // 難易度に応じたBPM設定
+        this.bassBpm = this.songData.bpm[this.difficulty] || 90;
+
+        // 楽曲モードは1問で1曲
+        this.totalQuestions = 1;
+    }
+
+    setupSongQuestion() {
+        if (!this.songData) return;
+
+        this.songNotes = [...this.songData.notes];
+        this.songCurrentNoteIndex = 0;
+        this.songBeatCount = 0;
+        this.songUserInputs = [];
+        this.songCorrectNotes = new Set();
+
+        // 総ビート数を計算
+        this.songTotalBeats = this.songNotes.reduce((sum, n) => sum + n.beats, 0);
+
+        // ビートマップを構築（各ビートにどのノートインデックスが対応するか）
+        this.songBeatMap = [];
+        let beatAccum = 0;
+        this.songNotes.forEach((noteData, index) => {
+            for (let b = 0; b < noteData.beats; b++) {
+                this.songBeatMap.push(index);
+            }
+            beatAccum += noteData.beats;
+        });
+
+        // 楽曲ノーテーションバーを生成
+        this.buildSongNotationBar();
+    }
+
+    buildSongNotationBar() {
+        const bar = document.getElementById('song-notation-bar');
+        if (!bar) return;
+        bar.innerHTML = '';
+
+        this.songNotes.forEach((noteData, index) => {
+            const noteEl = document.createElement('span');
+            noteEl.className = 'song-bar-note';
+            noteEl.dataset.index = index;
+            const noteName = noteData.note.replace(/[0-9]/g, '');
+            noteEl.textContent = noteName;
+            // 長い音符は幅を広くする
+            if (noteData.beats >= 2) {
+                noteEl.style.minWidth = `${noteData.beats * 24}px`;
+            }
+            bar.appendChild(noteEl);
+        });
+    }
+
+    updateSongUI() {
+        if (!this.songData) return;
+
+        // 楽曲タイトル
+        const titleEl = document.getElementById('song-title-label');
+        if (titleEl) titleEl.textContent = this.songData.name;
+
+        // 現在のノート名を表示
+        const noteNameEl = document.getElementById('song-current-note-name');
+        if (noteNameEl && this.songNotes.length > 0) {
+            const currentNote = this.songNotes[this.songCurrentNoteIndex];
+            if (currentNote) {
+                const noteName = currentNote.note.replace(/[0-9]/g, '');
+                noteNameEl.textContent = noteName;
+            } else {
+                noteNameEl.textContent = '-';
+            }
+        }
+
+        // 進行状況
+        const progressEl = document.getElementById('song-progress-text');
+        if (progressEl) {
+            progressEl.textContent = `${this.songCurrentNoteIndex + 1} / ${this.songNotes.length}`;
+        }
+
+        // BPM表示
+        const bpmEl = document.getElementById('header-bpm-display');
+        if (bpmEl) bpmEl.textContent = this.bassBpm;
+
+        // ノーテーションバーのハイライト更新
+        const barNotes = document.querySelectorAll('.song-bar-note');
+        barNotes.forEach((el, index) => {
+            el.classList.toggle('active', index === this.songCurrentNoteIndex);
+            el.classList.toggle('completed', this.songCorrectNotes.has(index));
+        });
+    }
+
+    startSongMode() {
+        if (this.songIsPlaying) {
+            this.stopSongMode();
+            return;
+        }
+
+        this.hasPlayed = true;
+        this.songIsPlaying = true;
+        this.songCurrentNoteIndex = 0;
+        this.songBeatCount = 0;
+        this.songUserInputs = [];
+        this.songCorrectNotes = new Set();
+
+        const playBtn = document.getElementById('play-sound-btn');
+        playBtn.classList.add('playing');
+        playBtn.querySelector('.play-text').textContent = '停止';
+
+        document.getElementById('hint-text').textContent = '表示された音をベースで弾こう！';
+
+        // ガイドを更新（初級は自動でガイドON）
+        if (this.difficulty === 'easy') {
+            this.isBassGuideActive = true;
+            const guideToggle = document.getElementById('bass-guide-checkbox');
+            if (guideToggle) guideToggle.checked = true;
+        }
+        this.updateSongGuide();
+        this.updateSongUI();
+
+        // メトロノーム開始
+        audioEngine.startMetronome(this.bassBpm, (beatCount, isAccent) => {
+            this.onSongBeat(beatCount);
+        }, 4);
+    }
+
+    stopSongMode() {
+        audioEngine.stopMetronome();
+        this.songIsPlaying = false;
+
+        const playBtn = document.getElementById('play-sound-btn');
+        playBtn.classList.remove('playing');
+        playBtn.querySelector('.play-text').textContent = '音を聴く';
+
+        // ガイドをクリア
+        document.querySelectorAll('.bass-fret-position').forEach(pos => {
+            pos.classList.remove('song-next-note', 'scale-guide');
+        });
+
+        // ビートドットをリセット
+        const songBeatDots = document.querySelectorAll('.song-beat-indicator .beat-dot');
+        songBeatDots.forEach(dot => dot.classList.remove('active'));
+    }
+
+    onSongBeat(beatCount) {
+        this.songBeatCount = beatCount;
+
+        // 楽曲終了チェック
+        if (beatCount >= this.songTotalBeats) {
+            this.stopSongMode();
+            this.evaluateSongPerformance();
+            return;
+        }
+
+        // 現在のビートに対応するノートインデックスを取得
+        const noteIndex = this.songBeatMap[beatCount];
+        if (noteIndex !== undefined && noteIndex !== this.songCurrentNoteIndex) {
+            this.songCurrentNoteIndex = noteIndex;
+        }
+
+        // ノートの最初のビートでガイド音を再生
+        const prevNoteIndex = beatCount > 0 ? this.songBeatMap[beatCount - 1] : -1;
+        if (noteIndex !== prevNoteIndex) {
+            // 新しいノートの開始
+            const currentNote = this.songNotes[noteIndex];
+            if (currentNote) {
+                // ガイド音を小さめに再生
+                audioEngine.playBassNote(currentNote.note);
+            }
+        }
+
+        // UI更新
+        this.updateSongUI();
+        this.updateSongGuide();
+
+        // ビートドットのアニメーション（4拍子）
+        const beatInMeasure = beatCount % 4;
+        const songBeatDots = document.querySelectorAll('.song-beat-indicator .beat-dot');
+        songBeatDots.forEach((dot, index) => {
+            dot.classList.toggle('active', index === beatInMeasure);
+        });
+    }
+
+    updateSongGuide() {
+        // 全てのガイドをクリア
+        document.querySelectorAll('.bass-fret-position').forEach(pos => {
+            pos.classList.remove('song-next-note', 'scale-guide', 'root-guide');
+        });
+
+        if (!this.songIsPlaying || this.songCurrentNoteIndex >= this.songNotes.length) return;
+
+        const currentNote = this.songNotes[this.songCurrentNoteIndex];
+        if (!currentNote) return;
+
+        const targetNoteName = currentNote.note;
+
+        // 次に弾くべき音をハイライト
+        document.querySelectorAll('.bass-fret-position').forEach(pos => {
+            const posNote = pos.dataset.note;
+            if (!posNote) return;
+
+            if (posNote === targetNoteName) {
+                pos.classList.add('song-next-note');
+            } else if (this.isBassGuideActive) {
+                // ガイドON時はCメジャースケールを薄く表示
+                const noteName = posNote.replace(/[0-9]/g, '');
+                const scaleNotes = audioEngine.getScaleNotes('C', 'major');
+                if (scaleNotes.includes(noteName)) {
+                    pos.classList.add('scale-guide');
+                }
+            }
+        });
+    }
+
+    checkSongAnswer(note) {
+        if (!this.songIsPlaying || this.songCurrentNoteIndex >= this.songNotes.length) return;
+
+        const currentNote = this.songNotes[this.songCurrentNoteIndex];
+        if (!currentNote) return;
+
+        const expectedNote = currentNote.note;
+        const isCorrect = note === expectedNote;
+
+        // 入力を記録
+        this.songUserInputs.push({
+            noteIndex: this.songCurrentNoteIndex,
+            note: note,
+            correct: isCorrect,
+            beat: this.songBeatCount
+        });
+
+        // ビジュアルフィードバック
+        const positions = document.querySelectorAll(`.bass-fret-position[data-note="${note}"]`);
+        positions.forEach(pos => {
+            if (isCorrect) {
+                pos.classList.add('correct');
+                setTimeout(() => pos.classList.remove('correct'), 300);
+            } else {
+                pos.classList.add('wrong');
+                setTimeout(() => pos.classList.remove('wrong'), 300);
+            }
+        });
+
+        if (isCorrect) {
+            this.songCorrectNotes.add(this.songCurrentNoteIndex);
+            // ノーテーションバーのノートを正解済みとしてマーク
+            const barNote = document.querySelector(`.song-bar-note[data-index="${this.songCurrentNoteIndex}"]`);
+            if (barNote) barNote.classList.add('completed');
+        }
+    }
+
+    evaluateSongPerformance() {
+        const totalNotes = this.songNotes.length;
+        const correctCount = this.songCorrectNotes.size;
+        const percentage = (correctCount / totalNotes) * 100;
+
+        // スコア計算
+        const baseScore = correctCount * 20;
+        const difficultyBonus = this.difficulty === 'hard' ? 100 : this.difficulty === 'medium' ? 50 : 0;
+        const accuracyBonus = percentage >= 90 ? 200 : percentage >= 70 ? 100 : 0;
+        const roundScore = baseScore + difficultyBonus + accuracyBonus;
+
+        // 70%以上正解で成功
+        const isSuccess = percentage >= 70;
+
+        if (isSuccess) {
+            this.correctCount++;
+            this.streak++;
+            this.maxStreak = Math.max(this.maxStreak, this.streak);
+            this.score += roundScore;
+            this.showFeedback(true, null);
+        } else {
+            this.streak = 0;
+            this.score += Math.floor(roundScore * 0.3);
+            this.showFeedback(false, `${correctCount}/${totalNotes}音 正解`);
+        }
+
+        document.getElementById('current-score').textContent = this.score;
+        document.getElementById('current-streak').textContent = this.streak;
+
+        setTimeout(() => this.nextQuestion(), 2500);
     }
 
     // ========== ドラムモード関連 ==========
@@ -2231,8 +2604,8 @@ class Game {
             return;
         }
 
-        // ドラム、マラカス、ベース(コードモード)はそれぞれのロジックで処理されるため除外
-        if (this.instrument === 'drum' || this.instrument === 'maracas' || (this.instrument === 'bass' && this.gameMode === 'chord')) {
+        // ドラム、マラカス、ベース(コードモード・楽曲モード)はそれぞれのロジックで処理されるため除外
+        if (this.instrument === 'drum' || this.instrument === 'maracas' || (this.instrument === 'bass' && this.gameMode === 'chord') || (this.instrument === 'bass' && this.gameMode === 'song')) {
             return;
         }
 
@@ -2279,6 +2652,13 @@ class Game {
 
     passQuestion() {
         if (!this.hasPlayed || this.questionNumber > this.totalQuestions) return;
+
+        // 楽曲モード中のパス：停止して評価
+        if (this.instrument === 'bass' && this.gameMode === 'song' && this.songIsPlaying) {
+            this.stopSongMode();
+            this.evaluateSongPerformance();
+            return;
+        }
 
         // 不正解扱いとして処理
         this.streak = 0;
@@ -2513,6 +2893,11 @@ class Game {
         // ベースモードの場合はメトロノームを停止
         if (this.bassIsPlaying) {
             this.stopBassMode();
+        }
+
+        // 楽曲モードの場合は停止
+        if (this.songIsPlaying) {
+            this.stopSongMode();
         }
 
         Object.values(this.screens).forEach(s => s.classList.remove('active'));
