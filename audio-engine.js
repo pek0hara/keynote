@@ -154,7 +154,123 @@ class AudioEngine {
             'F7': 'Fセブン', 'G7': 'Gセブン', 'A7': 'Aセブン', 'B7': 'Bセブン'
         };
 
-        // ギターのコードフォーム（弦番号: フレット番号）
+            // 楽曲定義（ベース楽曲モード用）
+        this.songDefinitions = {
+            'twinkle': {
+                name: 'きらきら星',
+                bpm: { easy: 70, medium: 90, hard: 110 },
+                notes: [
+                    // 1行目: ドドソソララソー
+                    { note: 'C2', beats: 1 }, { note: 'C2', beats: 1 },
+                    { note: 'G2', beats: 1 }, { note: 'G2', beats: 1 },
+                    { note: 'A2', beats: 1 }, { note: 'A2', beats: 1 },
+                    { note: 'G2', beats: 2 },
+                    // 2行目: ファファミミレレドー
+                    { note: 'F2', beats: 1 }, { note: 'F2', beats: 1 },
+                    { note: 'E2', beats: 1 }, { note: 'E2', beats: 1 },
+                    { note: 'D2', beats: 1 }, { note: 'D2', beats: 1 },
+                    { note: 'C2', beats: 2 },
+                    // 3行目: ソソファファミミレー
+                    { note: 'G2', beats: 1 }, { note: 'G2', beats: 1 },
+                    { note: 'F2', beats: 1 }, { note: 'F2', beats: 1 },
+                    { note: 'E2', beats: 1 }, { note: 'E2', beats: 1 },
+                    { note: 'D2', beats: 2 },
+                    // 4行目: ソソファファミミレー
+                    { note: 'G2', beats: 1 }, { note: 'G2', beats: 1 },
+                    { note: 'F2', beats: 1 }, { note: 'F2', beats: 1 },
+                    { note: 'E2', beats: 1 }, { note: 'E2', beats: 1 },
+                    { note: 'D2', beats: 2 },
+                    // 5行目: ドドソソララソー
+                    { note: 'C2', beats: 1 }, { note: 'C2', beats: 1 },
+                    { note: 'G2', beats: 1 }, { note: 'G2', beats: 1 },
+                    { note: 'A2', beats: 1 }, { note: 'A2', beats: 1 },
+                    { note: 'G2', beats: 2 },
+                    // 6行目: ファファミミレレドー
+                    { note: 'F2', beats: 1 }, { note: 'F2', beats: 1 },
+                    { note: 'E2', beats: 1 }, { note: 'E2', beats: 1 },
+                    { note: 'D2', beats: 1 }, { note: 'D2', beats: 1 },
+                    { note: 'C2', beats: 2 }
+                ]
+            },
+            'kaeru': {
+                name: 'かえるの合唱',
+                bpm: { easy: 70, medium: 90, hard: 110 },
+                notes: [
+                    // ドレミファミレドー
+                    { note: 'C2', beats: 1 }, { note: 'D2', beats: 1 },
+                    { note: 'E2', beats: 1 }, { note: 'F2', beats: 1 },
+                    { note: 'E2', beats: 1 }, { note: 'D2', beats: 1 },
+                    { note: 'C2', beats: 2 },
+                    // ミファソラソファミー
+                    { note: 'E2', beats: 1 }, { note: 'F2', beats: 1 },
+                    { note: 'G2', beats: 1 }, { note: 'A2', beats: 1 },
+                    { note: 'G2', beats: 1 }, { note: 'F2', beats: 1 },
+                    { note: 'E2', beats: 2 },
+                    // ドードー
+                    { note: 'C2', beats: 2 }, { note: 'C2', beats: 2 },
+                    // ドドレレミミファファ
+                    { note: 'C2', beats: 1 }, { note: 'C2', beats: 1 },
+                    { note: 'D2', beats: 1 }, { note: 'D2', beats: 1 },
+                    { note: 'E2', beats: 1 }, { note: 'E2', beats: 1 },
+                    { note: 'F2', beats: 1 }, { note: 'F2', beats: 1 },
+                    // ミーレードー
+                    { note: 'E2', beats: 1 }, { note: 'D2', beats: 1 },
+                    { note: 'C2', beats: 2 }
+                ]
+            },
+            'choucho': {
+                name: 'ちょうちょう',
+                bpm: { easy: 70, medium: 90, hard: 110 },
+                notes: [
+                    // ソミミー ファレレー
+                    { note: 'G2', beats: 1 }, { note: 'E2', beats: 1 },
+                    { note: 'E2', beats: 2 },
+                    { note: 'F2', beats: 1 }, { note: 'D2', beats: 1 },
+                    { note: 'D2', beats: 2 },
+                    // ドレミファソソソー
+                    { note: 'C2', beats: 1 }, { note: 'D2', beats: 1 },
+                    { note: 'E2', beats: 1 }, { note: 'F2', beats: 1 },
+                    { note: 'G2', beats: 1 }, { note: 'G2', beats: 1 },
+                    { note: 'G2', beats: 2 },
+                    // ソミミー ファレレー
+                    { note: 'G2', beats: 1 }, { note: 'E2', beats: 1 },
+                    { note: 'E2', beats: 2 },
+                    { note: 'F2', beats: 1 }, { note: 'D2', beats: 1 },
+                    { note: 'D2', beats: 2 },
+                    // ドミソソミーー
+                    { note: 'C2', beats: 1 }, { note: 'E2', beats: 1 },
+                    { note: 'G2', beats: 1 }, { note: 'G2', beats: 1 },
+                    { note: 'E2', beats: 4 }
+                ]
+            },
+            'mary': {
+                name: 'メリーさんのひつじ',
+                bpm: { easy: 70, medium: 90, hard: 110 },
+                notes: [
+                    // ミレドレミミミー
+                    { note: 'E2', beats: 1 }, { note: 'D2', beats: 1 },
+                    { note: 'C2', beats: 1 }, { note: 'D2', beats: 1 },
+                    { note: 'E2', beats: 1 }, { note: 'E2', beats: 1 },
+                    { note: 'E2', beats: 2 },
+                    // レレレー ミソソー
+                    { note: 'D2', beats: 1 }, { note: 'D2', beats: 1 },
+                    { note: 'D2', beats: 2 },
+                    { note: 'E2', beats: 1 }, { note: 'G2', beats: 1 },
+                    { note: 'G2', beats: 2 },
+                    // ミレドレミミミミ
+                    { note: 'E2', beats: 1 }, { note: 'D2', beats: 1 },
+                    { note: 'C2', beats: 1 }, { note: 'D2', beats: 1 },
+                    { note: 'E2', beats: 1 }, { note: 'E2', beats: 1 },
+                    { note: 'E2', beats: 1 }, { note: 'E2', beats: 1 },
+                    // レレミレドーーー
+                    { note: 'D2', beats: 1 }, { note: 'D2', beats: 1 },
+                    { note: 'E2', beats: 1 }, { note: 'D2', beats: 1 },
+                    { note: 'C2', beats: 4 }
+                ]
+            }
+        };
+
+    // ギターのコードフォーム（弦番号: フレット番号）
         // 弦番号: 1=1弦(最高音), 6=6弦(最低音)
         this.guitarChordForms = {
             // メジャーコード
@@ -817,6 +933,19 @@ class AudioEngine {
             default:
                 return this.getChordsByDifficulty('easy');
         }
+    }
+
+    // 楽曲リストを取得
+    getSongList() {
+        return Object.entries(this.songDefinitions).map(([id, song]) => ({
+            id: id,
+            name: song.name
+        }));
+    }
+
+    // 楽曲データを取得
+    getSong(songId) {
+        return this.songDefinitions[songId] || null;
     }
 
     // ルート音からメジャースケール上の音を取得
