@@ -276,7 +276,11 @@ class Game {
         if (guideToggle) {
             guideToggle.addEventListener('change', (e) => {
                 this.isBassGuideActive = e.target.checked;
-                this.updateBassGuide();
+                if (this.gameMode === 'song') {
+                    this.updateSongGuide();
+                } else {
+                    this.updateBassGuide();
+                }
             });
         }
 
@@ -1676,7 +1680,21 @@ class Game {
             pos.classList.remove('song-next-note', 'scale-guide', 'root-guide');
         });
 
-        if (!this.songIsPlaying || this.songCurrentNoteIndex >= this.songNotes.length) return;
+        // 再生前でもガイドON時はCメジャースケールを表示
+        if (!this.songIsPlaying || this.songCurrentNoteIndex >= this.songNotes.length) {
+            if (this.isBassGuideActive) {
+                const scaleNotes = audioEngine.getScaleNotes('C', 'major');
+                document.querySelectorAll('.bass-fret-position').forEach(pos => {
+                    const posNote = pos.dataset.note;
+                    if (!posNote) return;
+                    const noteName = posNote.replace(/[0-9]/g, '');
+                    if (scaleNotes.includes(noteName)) {
+                        pos.classList.add('scale-guide');
+                    }
+                });
+            }
+            return;
+        }
 
         const currentNote = this.songNotes[this.songCurrentNoteIndex];
         if (!currentNote) return;
