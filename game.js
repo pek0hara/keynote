@@ -1582,6 +1582,12 @@ class Game {
             el.classList.toggle('active', index === this.songCurrentNoteIndex);
             el.classList.toggle('completed', this.songCorrectNotes.has(index));
         });
+
+        // アクティブなノートをスクロール表示
+        const activeNote = barNotes[this.songCurrentNoteIndex];
+        if (activeNote) {
+            activeNote.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+        }
     }
 
     startSongMode() {

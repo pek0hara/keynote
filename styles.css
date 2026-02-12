@@ -1691,13 +1691,14 @@ input:checked + .toggle-slider:before {
     display: flex;
     flex-wrap: wrap;
     gap: 3px;
-    justify-content: center;
+    justify-content: flex-start;
     padding: 8px 12px;
     background: rgba(255, 255, 255, 0.05);
     border-radius: 12px;
     margin-bottom: 12px;
     max-height: 160px;
     overflow-y: auto;
+    scroll-behavior: smooth;
 }
 
 .song-bar-note {
