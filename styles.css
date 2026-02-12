@@ -1696,7 +1696,7 @@ input:checked + .toggle-slider:before {
     background: rgba(255, 255, 255, 0.05);
     border-radius: 12px;
     margin-bottom: 12px;
-    max-height: 80px;
+    max-height: 160px;
     overflow-y: auto;
 }
 
