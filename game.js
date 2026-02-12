@@ -223,6 +223,8 @@ class Game {
     initPianoGuide() {
         const guideToggle = document.getElementById('piano-guide-checkbox');
         if (guideToggle) {
+            // 初期状態を同期
+            this.isPianoGuideActive = guideToggle.checked;
             guideToggle.addEventListener('change', (e) => {
                 this.isPianoGuideActive = e.target.checked;
                 this.updatePianoGuide();
@@ -258,6 +260,8 @@ class Game {
     initGuitarGuide() {
         const guideToggle = document.getElementById('guitar-guide-checkbox');
         if (guideToggle) {
+            // 初期状態を同期
+            this.isGuitarGuideActive = guideToggle.checked;
             guideToggle.addEventListener('change', (e) => {
                 this.isGuitarGuideActive = e.target.checked;
                 this.updateGuitarGuide();
@@ -274,6 +278,8 @@ class Game {
         // ガイド切り替えスイッチ
         const guideToggle = document.getElementById('bass-guide-checkbox');
         if (guideToggle) {
+            // 初期状態を同期
+            this.isBassGuideActive = guideToggle.checked;
             guideToggle.addEventListener('change', (e) => {
                 this.isBassGuideActive = e.target.checked;
                 if (this.gameMode === 'song') {
@@ -762,9 +768,11 @@ class Game {
                 if (songDisplay) songDisplay.classList.remove('hidden');
                 if (chordDisplay) chordDisplay.classList.add('hidden');
                 toggleBpmHeader(true);
+                this.updateSongGuide();
             } else {
                 if (songDisplay) songDisplay.classList.add('hidden');
                 if (chordDisplay) chordDisplay.classList.remove('hidden');
+                this.updateBassGuide();
             }
         } else if (this.instrument === 'piano') {
             this.pianoKeyboard.classList.remove('hidden');
@@ -862,6 +870,7 @@ class Game {
         if (this.instrument === 'bass' && this.gameMode === 'song') {
             this.setupSongQuestion();
             this.updateSongUI();
+            this.updateSongGuide();
             document.getElementById('current-score').textContent = this.score;
             document.getElementById('current-streak').textContent = this.streak;
             document.getElementById('question-number').textContent = `${this.questionNumber}/${this.totalQuestions}`;
@@ -1632,10 +1641,8 @@ class Game {
         playBtn.classList.remove('playing');
         playBtn.querySelector('.play-text').textContent = '音を聴く';
 
-        // ガイドをクリア
-        document.querySelectorAll('.bass-fret-position').forEach(pos => {
-            pos.classList.remove('song-next-note', 'scale-guide');
-        });
+        // ガイドを更新（トグルON時はスケールガイドを再表示）
+        this.updateSongGuide();
 
         // ビートドットをリセット
         const songBeatDots = document.querySelectorAll('.song-beat-indicator .beat-dot');
