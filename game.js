@@ -873,6 +873,7 @@ class Game {
         if (this.instrument === 'bass' && this.gameMode === 'chord') {
             this.setupBassQuestion();
             this.updateBassUI();
+            this.updateBassGuide();
             document.getElementById('current-score').textContent = this.score;
             document.getElementById('current-streak').textContent = this.streak;
             document.getElementById('question-number').textContent = `${this.questionNumber}/${this.totalQuestions}`;
@@ -1309,7 +1310,7 @@ class Game {
             pos.classList.remove('scale-guide', 'root-guide', 'chord-tone-guide');
         });
 
-        if (!this.isBassGuideActive || !this.bassIsPlaying) return;
+        if (!this.isBassGuideActive) return;
 
         // 現在のコードを取得
         const currentChord = this.bassChordProgression[this.bassCurrentChordIndex];
