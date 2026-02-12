@@ -47,6 +47,9 @@ class Game {
         this.songIsPlaying = false; // 再生中フラグ
         this.songUserInputs = []; // ユーザーの入力履歴
         this.songCorrectNotes = new Set(); // 正解済みのノートインデックス
+        this.isAccompanimentActive = true; // 伴奏ON/OFFフラグ
+        this.songChords = []; // 伴奏コード進行
+        this.songChordBeatSet = null; // コードが変わるビートのSet
 
         // ドラムモード用
         this.drumPattern = null; // 現在のドラムパターン
@@ -287,6 +290,15 @@ class Game {
                 } else {
                     this.updateBassGuide();
                 }
+            });
+        }
+
+        // 伴奏切り替えスイッチ
+        const accompanimentToggle = document.getElementById('accompaniment-checkbox');
+        if (accompanimentToggle) {
+            this.isAccompanimentActive = accompanimentToggle.checked;
+            accompanimentToggle.addEventListener('change', (e) => {
+                this.isAccompanimentActive = e.target.checked;
             });
         }
 
@@ -764,14 +776,17 @@ class Game {
             // 楽曲モードとコード進行表示の切り替え
             const songDisplay = document.getElementById('song-mode-display');
             const chordDisplay = document.querySelector('.chord-progression-display');
+            const accompanimentControl = document.getElementById('accompaniment-control');
             if (this.gameMode === 'song') {
                 if (songDisplay) songDisplay.classList.remove('hidden');
                 if (chordDisplay) chordDisplay.classList.add('hidden');
+                if (accompanimentControl) accompanimentControl.classList.remove('hidden');
                 toggleBpmHeader(true);
                 this.updateSongGuide();
             } else {
                 if (songDisplay) songDisplay.classList.add('hidden');
                 if (chordDisplay) chordDisplay.classList.remove('hidden');
+                if (accompanimentControl) accompanimentControl.classList.add('hidden');
                 this.updateBassGuide();
             }
         } else if (this.instrument === 'piano') {
@@ -1520,6 +1535,10 @@ class Game {
         this.songUserInputs = [];
         this.songCorrectNotes = new Set();
 
+        // 伴奏コード進行を読み込み
+        this.songChords = this.songData.chords || [];
+        this.songChordBeatSet = new Set(this.songChords.map(c => c.startBeat));
+
         // 総ビート数を計算
         this.songTotalBeats = this.songNotes.reduce((sum, n) => sum + n.beats, 0);
 
@@ -1673,6 +1692,16 @@ class Game {
             if (currentNote) {
                 // ガイド音を小さめに再生
                 audioEngine.playBassNote(currentNote.note);
+            }
+        }
+
+        // 伴奏コードを再生（コード変更ビートの場合）
+        if (this.isAccompanimentActive && this.songChordBeatSet && this.songChordBeatSet.has(beatCount)) {
+            const chordEntry = this.songChords.find(c => c.startBeat === beatCount);
+            if (chordEntry) {
+                const beatsPerSecond = this.bassBpm / 60;
+                const duration = Math.min(4 / beatsPerSecond, 2);
+                audioEngine.playAccompanimentChord(chordEntry.chord, duration);
             }
         }
 
