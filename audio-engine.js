@@ -190,6 +190,21 @@ class AudioEngine {
                     { note: 'E2', beats: 1 }, { note: 'E2', beats: 1 },
                     { note: 'D2', beats: 1 }, { note: 'D2', beats: 1 },
                     { note: 'C2', beats: 2 }
+                ],
+                // 伴奏コード進行（小節ごと = 4拍ごと）
+                chords: [
+                    { chord: 'C', startBeat: 0 },
+                    { chord: 'F', startBeat: 4 },
+                    { chord: 'F', startBeat: 8 },
+                    { chord: 'C', startBeat: 12 },
+                    { chord: 'C', startBeat: 16 },
+                    { chord: 'G', startBeat: 20 },
+                    { chord: 'C', startBeat: 24 },
+                    { chord: 'G', startBeat: 28 },
+                    { chord: 'C', startBeat: 32 },
+                    { chord: 'F', startBeat: 36 },
+                    { chord: 'F', startBeat: 40 },
+                    { chord: 'C', startBeat: 44 }
                 ]
             },
             'kaeru': {
@@ -216,6 +231,16 @@ class AudioEngine {
                     // ミーレードー
                     { note: 'E2', beats: 1 }, { note: 'D2', beats: 1 },
                     { note: 'C2', beats: 2 }
+                ],
+                chords: [
+                    { chord: 'C', startBeat: 0 },
+                    { chord: 'G', startBeat: 4 },
+                    { chord: 'C', startBeat: 8 },
+                    { chord: 'G', startBeat: 12 },
+                    { chord: 'C', startBeat: 16 },
+                    { chord: 'C', startBeat: 20 },
+                    { chord: 'F', startBeat: 24 },
+                    { chord: 'C', startBeat: 28 }
                 ]
             },
             'choucho': {
@@ -241,6 +266,15 @@ class AudioEngine {
                     { note: 'C2', beats: 1 }, { note: 'E2', beats: 1 },
                     { note: 'G2', beats: 1 }, { note: 'G2', beats: 1 },
                     { note: 'E2', beats: 4 }
+                ],
+                chords: [
+                    { chord: 'C', startBeat: 0 },
+                    { chord: 'G', startBeat: 4 },
+                    { chord: 'C', startBeat: 8 },
+                    { chord: 'C', startBeat: 12 },
+                    { chord: 'C', startBeat: 16 },
+                    { chord: 'G', startBeat: 20 },
+                    { chord: 'C', startBeat: 24 }
                 ]
             },
             'mary': {
@@ -266,6 +300,16 @@ class AudioEngine {
                     { note: 'D2', beats: 1 }, { note: 'D2', beats: 1 },
                     { note: 'E2', beats: 1 }, { note: 'D2', beats: 1 },
                     { note: 'C2', beats: 4 }
+                ],
+                chords: [
+                    { chord: 'C', startBeat: 0 },
+                    { chord: 'C', startBeat: 4 },
+                    { chord: 'G', startBeat: 8 },
+                    { chord: 'C', startBeat: 12 },
+                    { chord: 'C', startBeat: 16 },
+                    { chord: 'C', startBeat: 20 },
+                    { chord: 'G', startBeat: 24 },
+                    { chord: 'C', startBeat: 28 }
                 ]
             }
         };
@@ -853,6 +897,46 @@ class AudioEngine {
         osc.stop(now + duration);
     }
     
+    // 伴奏用コード再生（控えめな音量のピアノ和音）
+    async playAccompanimentChord(chordName, duration = 1.5) {
+        const notes = this.chordDefinitions[chordName];
+        if (!notes || !this.isInitialized) return;
+        await this.ensureAudioContextRunning();
+        const now = this.audioContext.currentTime;
+
+        notes.forEach((note) => {
+            const frequency = this.noteFrequencies[note];
+            if (!frequency) return;
+
+            const osc1 = this.audioContext.createOscillator();
+            const osc2 = this.audioContext.createOscillator();
+            osc1.type = 'sine';
+            osc1.frequency.setValueAtTime(frequency, now);
+            osc2.type = 'triangle';
+            osc2.frequency.setValueAtTime(frequency, now);
+
+            const gain1 = this.audioContext.createGain();
+            const gain2 = this.audioContext.createGain();
+            const masterGain = this.audioContext.createGain();
+
+            gain1.gain.setValueAtTime(0.15, now);
+            gain2.gain.setValueAtTime(0.1, now);
+
+            masterGain.gain.setValueAtTime(0, now);
+            masterGain.gain.linearRampToValueAtTime(0.2, now + 0.01);
+            masterGain.gain.exponentialRampToValueAtTime(0.12, now + 0.1);
+            masterGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+            osc1.connect(gain1).connect(masterGain).connect(this.audioContext.destination);
+            osc2.connect(gain2).connect(masterGain);
+
+            osc1.start(now);
+            osc2.start(now);
+            osc1.stop(now + duration);
+            osc2.stop(now + duration);
+        });
+    }
+
     getNoteNameJP(note) {
         const noteName = note.replace(/[0-9]/g, '');
         return this.noteNamesJP[noteName] || note;
